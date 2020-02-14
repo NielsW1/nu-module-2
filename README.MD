@@ -64,6 +64,13 @@ The application you will be making consists of two parts:
  - Encrypted file transfer.
  Prove this by transferring a text file and creating a Wireshark dump in which none of the text is visible, unless decrypted.
  Also show that decryption of this dump actually results in the original file.
+ - Security.
+ The server should not allow a client to just list any file on its disk.
+ Make sure the client is 'sandboxed' on the file server.
+ - Disk space management.
+ Imagine up-/downloading multiple large files.
+ At some point you might reach your client's or server's disk space limits.
+ Manage this.
 
 ##### Deliverables
 
