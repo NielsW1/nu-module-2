@@ -1,11 +1,12 @@
 # Module 2 Final Assignment
 
-###### Nedap University 4.0 2018–2020
+###### Nedap University 5.0 2019–2021
 
 ###### Authors
 
  - @silvanverschuur
  - @erikhuizinga
+ - @stefan-dijkstra-nedap
 
 ## Introduction
 
@@ -24,10 +25,10 @@ Discussion about the assignment is allowed, but you should always be able to def
 You've got 11 work days to finish the assignment and demonstrate your final results.
 
 To be able to demonstrate your skills, you will be provided with a Raspberry Pi 3 Model B+ starter kit.
-The Raspberry Pi will be pre-installed with the Raspbian Stretch Lite image (a minimal Linux distro without GUI), Java 8, the Java Cryptography Extension (JCE) and some other configuration.
-When the device boots, a Wi-Fi AP network is set up.
+The Raspberry Pi will be pre-installed with the Raspbian Buster Lite image (a minimal Linux distro without GUI), Java 11 and some other configuration.
+When the device boots, a Wi-Fi access point network is set up.
 The Raspberry Pi setup guide to configure your laptop and communicate with the device can be found further down this document.
-The WiFi network should be used to communicate between your laptop and the Raspberry Pis.
+The Wi-Fi network should be used to communicate between your laptop and the Raspberry Pis.
 
 ## Requirements
 
@@ -49,7 +50,7 @@ The application you will be making consists of two parts:
  Under what circumstances can this improve or deteriorate the total transfer speed / quality?
  - You should be able to prove that the file you download from the server is exactly the same as the one on the server, and the other way around (data integrity).
  - Your client should be able to discover the server on a local network without knowing its IP address.
- - Your client should be able to show statistics about download speeds, packet loss, retransmissions, etc.
+ - Your client should be able to show statistics about total transmission time, download speed, packet loss, retransmissions, etc.
  - *Have fun!*
 
 ##### Stretch goals (bonus)
@@ -71,15 +72,19 @@ The application you will be making consists of two parts:
  Imagine up-/downloading multiple large files.
  At some point you might reach your client's or server's disk space limits.
  Manage this.
+ - Server statistics: your server could keep track of stats per client, file, session, etc. in some human-readable format.
 
 ##### Deliverables
 
  - During development you should work with version control in Git.
  - Keep your code in a repository via GitHub.
- - The repo should be accessible to the coaches (or just make it public).
+ - The repo must be accessible to the coaches (or just make it public).
+ - Tag your final version on GitHub.
  - Pro tip: try working with branches and pull requests!
- - For submission, link to a version tagged 'final' on GitHub.
- Email the link to the tag to nu4coaches@nedap.com.
+ - A `git clone` of your project on your final revision must be runnable out of the box
+For example, a Gradle or Maven command that needs to be run is acceptable.
+Missing dependencies, compilation errors, etc. are not!
+Assume nothing about the coaches' machines, except that they have JRE/JDK 11 installed.
  - The project should have the following content and structure:
    - There is a README file in the project root with instructions how to install and start the applications (clients and servers).
    - Think about which directories and files are necessary, and any pre-conditions that should be met for successful installation.
@@ -88,20 +93,24 @@ The application you will be making consists of two parts:
  - Any necessary but non-standard predefined classes and libraries should be included in JARs.
  - Typical causes that make the installation and compilation procedure fail are names and paths or hardcoded URLs, so make sure to not use any.
  Test this before submitting your project.
+ - A report, see below.
+
+Email your deliverables to nu5coaches@nedap.com, i.e. the report and the link to the final version on GitHub.
 
 ##### Report
 
 This assignment is a lot of work, therefore we do not want you to focus to much on the meta part of the process.
 You do have to write a report.
 The purpose of your report should be to explain the protocol you designed and how you got to the values of the several parameters.
-E-mail your report to nu4coaches@nedap.com as a PDF.
+E-mail your report to nu5coaches@nedap.com as a PDF.
 Pro tip: [markdowntopdf.com](https://www.markdowntopdf.com)
 
 ## Tournament
 
-On Thursday the 19th of April 2019 we will host a tournament!
+On Friday the 17th of April 2020 we will host a tournament!
 You and your applications will compete against the other competitors' applications.
 The competitor that can transmit a large file without errors in unstable network conditions, which will be provided by the coaches, in the least amount of time wins!
+There will be a grand prize for the winner.
 
 ## Evaluation
 
@@ -143,17 +152,17 @@ Use it to keep track of and judge your own progress.
  - Appropriate unit tests are provided.
  - Appropriate system tests are provided.
  - Sufficient test coverage is reached.
- - Tests are well documented, or better: the tests are self-documenting (a testable code base with good test can be self-documenting).
+ - Tests are well documented, or better: the tests are self-documenting (a testable code base with good tests can be self-documenting).
  - All classes in the system have been tested by unit testing.
  - All tests pass.
 
 ## Organisational overview Calendar
 
-| Calendar week | Day            | Time  | Activity                  |
-|---------------|----------------|-------|---------------------------|
-| 14            | Wed April 3rd  | 09:00 | Final assignment kickoff  |
-| 16            | Wed April 17th | 23:59 | Deadline for deliverables |
-| 16            | Thu April 18th | 15:00 | Tournament and review     |
+| Calendar week | Day            | Time        | Activity                  |
+|---------------|----------------|-------------|---------------------------|
+| 14            | Wed April 1rd  | 13:00–15:00 | Final assignment kickoff  |
+| 16            | Thu April 16th | 23:59       | Deadline for deliverables |
+| 16            | Fri April 17th | 13:00–16:00 | Tournament and review     |
 
 ---
 
@@ -165,17 +174,18 @@ You will be provided with a Raspberry Pi 3B+ starter kit.
 The Pi is pre-installed with the latest Raspbian image.
 This is a minimal Linux distribution without a graphical interface.
 
-A Java SDK is also installed including the Java Cryptography Extension (JCE).
+A Java SDK is also installed.
 
 To connect to the Pi you can use any SSH client.
 The default credentials are:
  - Username: `pi`
  - Password: `raspberry`
 
-It's recommended to shutdown the Pi before disconnecting power. Just unplugging power may cause a corrupted filesystem.
+It's recommended to shutdown the Pi before disconnecting power
+Just unplugging power may cause a corrupted filesystem.
 You can shutdown the Pi with the following command:
 
-`sudo shutdown -P now`
+`sudo shutdown -h now`
 
 ## Networking
 
@@ -190,11 +200,13 @@ The physical adapter is configured to use DHCP to obtain an IP address.
 
 ### Wi-Fi
 
-The name of the Wi-Fi network is unique for each student. The raspberry Pi is configured to start a DHCP server on the Wi-Fi interface. Your computer will automatically get an IP address from the Pi (range 172.16.1.2 - 172.16.1.100).
+The name of the Wi-Fi network is unique for each participant.
+The raspberry Pi is configured to start a DHCP server on the Wi-Fi interface.
+Your computer will automatically get an IP address from the Pi (range 172.16.1.2–172.16.1.100).
 
  - SSID: `nu-pi-$name`
  - Security: `WPA2`
- - WiFi password: `nedap1234`
+ - Wi-Fi password: `nedap1234`
  - Static IP address: `172.16.1.1`
 
 We recommend you to change the Wi-Fi password once you're connected to the Pi. This can be done by editing the following file:
@@ -205,25 +217,8 @@ Replace the password on the following line:
 
 `wpa_passphrase=nedap1234`
 
-## Project setup
+## Java project setup
 
-The `nedap/nu-module-2` repo on GitHub contains a sample setup of a Gradle project.
-It contains a task to automatically send a JAR to the Raspberry Pi over SSH.
-
-## Linux service
-
-To start and stop our service when the Pi starts, we need a service wrapper. We've created a service wrapper that start your Java application: `num2.service`. The service configuration can be found in:
-
-`/lib/systemd/system/num2.service`
-
-The service is automatically started at boot. You can manually start/stop the service using:
-
-`sudo systemctl start num2.service`
-
-`sudo systemctl stop num2.service`
-
-If you modify the service configuration you have to reload the configuration:
-
-`sudo systemctl daemon-reload`
-
-See also [this resource](http://www.diegoacuna.me/how-to-run-a-script-as-a-service-in-raspberry-pi-raspbian-jessie/) about running scripts as services.
+The `nedap/nu-module-2` repo on GitHub contains a sample setup of a Gradle project in the repo root.
+It contains a task to automatically send a JAR to the Raspberry Pi over SSH: `./gradlew deploy` (on unix/linux systems).
+You can get the status of your deployed application from the Pi using the `status` task.
