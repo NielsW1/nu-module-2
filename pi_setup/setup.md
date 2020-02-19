@@ -59,7 +59,7 @@ Copy the setup script to the Pi:
 
 Check that the network connection is working, then execute the setup script:
 
-`sudo setup.sh {name}`
+`sudo ./setup.sh {name}`
 
 (For `{name}`, insert your name, e.g. `robin`, to personalize the Pi's Wi-fi SSID.)
 

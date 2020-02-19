@@ -1,11 +1,13 @@
 #!/bin/bash
 
 #
-# Usage: sudo ./setup.sh <ssid>
+# Usage: sudo ./setup.sh <name>
 #
+
 apt-get update
-apt-get upgrade -y
-apt-get install -y vim oracle-java8-jdk dnsmasq hostapd rng-tools
+apt-get -y upgrade
+
+apt-get -y install default-jdk
 
 cat >>/etc/dhcpcd.conf <<EOL
 interface wlan0
@@ -13,8 +15,10 @@ interface wlan0
     nohook wpa_supplicant
 EOL
 
-mv /etc/dnsmasq.conf /etc/dnsmasq.conf.org
-
+apt-get install -y hostapd dnsmasq
+systemctl stop hostapd
+systemctl stop dnsmasq
+mv /etc/dnsmasq.conf /etc/dnsmasq.conf.bak
 cat >/etc/dnsmasq.conf <<EOL
 interface=wlan0      # Use the require wireless interface - usually wlan0
   dhcp-range=172.16.1.2,172.16.1.100,255.255.255.0,24h
@@ -39,25 +43,23 @@ EOL
 
 /bin/sed -i 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/g' /etc/default/hostapd
 
-/bin/systemctl unmask hostapd
-/bin/systemctl enable hostapd
-/bin/systemctl start hostapd
-
-cp ./UnlimitedJCEPolicyJDK8/*.jar /usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/jre/lib/security
+systemctl unmask hostapd
+systemctl enable hostapd
+systemctl start hostapd
 
 cat >/lib/systemd/system/num2.service <<EOL
-[Unit] 
-Description=Nedap U Service 
-After=multi-user.agent 
+[Unit]
+Description=Nedap U Service
+After=multi-user.agent
 
-[Service] 
-Type=simple 
-ExecStart=/usr/bin/java -jar /home/pi/NUM2.jar 
-Restart=on-abort 
-TimeoutStopSec=30 
+[Service]
+Type=simple
+ExecStart=/usr/bin/java -jar /home/pi/NUM2.jar
+Restart=on-abort
+TimeoutStopSec=30
 
-[Install] 
-WantedBy=multi-user.target 
+[Install]
+WantedBy=multi-user.target
 EOL
 
 systemctl daemon-reload
