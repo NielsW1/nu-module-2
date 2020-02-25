@@ -223,3 +223,16 @@ Replace the password on the following line:
 The `nedap/nu-module-2` repo on GitHub contains a sample setup of a Gradle project in the repo root.
 It contains a task to automatically send a JAR to the Raspberry Pi over SSH: `./gradlew deploy` (on unix/linux systems).
 You can get the status of your deployed application from the Pi using the `status` task.
+
+---
+
+## Presentation
+
+Using [Docker Compose](https://docs.docker.com/compose/install/), from `./presentation` run
+
+```
+docker-compose up
+```
+
+to run the presentation server.
+Browse to `localhost:8000` to view the presentation.

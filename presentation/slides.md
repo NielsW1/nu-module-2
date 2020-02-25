@@ -1,14 +1,3 @@
----
-robots: noindex, nofollow
-slideOptions:
-  theme: night
-  width: 1700
-  height: 1200
----
-
-<!-- show me on https://hackmd.io/xG5yBzNXQZ6JYm4B8iBgGg/slide -->
-<!-- edit me on https://hackmd.io/xG5yBzNXQZ6JYm4B8iBgGg?both -->
-
 ![](https://user-images.githubusercontent.com/19374736/55320855-7bb85f00-5478-11e9-97c4-6402afa8c5b7.png)
 
 ----
@@ -29,14 +18,13 @@ Bouw je eigen file client en server over UDP
 
 Meer info: raspberrypi.org
 
-![](https://i.imgur.com/ZOFHmNE.png)
+<!-- .slide: data-background-image="https://i.imgur.com/vjaYzK2.jpg" -->
 
 ----
 
 # Repo on GitHub
 
 github.com/nedap/nu-module-2
-
 
 ![https://github.com/nedap/nu-module-2/](https://user-images.githubusercontent.com/19374736/55318094-31cc7a80-5472-11e9-907e-38858a82c459.png)
 
@@ -68,7 +56,3 @@ OpenSSH for Windows: git.io/fjk7R
 <!-- .slide: data-background-image="https://media.giphy.com/media/xTiTnrXFSsd0I8quMU/giphy.gif" -->
 
 # Pi time!
-
----
-
-<!-- .slide: data-background-image="https://media.giphy.com/media/7K3p2z8Hh9QOI/giphy.gif" -->
