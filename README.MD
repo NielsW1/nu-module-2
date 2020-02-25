@@ -40,6 +40,7 @@ The application you will be making consists of two parts:
 ##### Minimal requirements
 
  - You should be able to upload and download files from the client to the Raspberry Pi Server.
+ - The client should allow you to remove or replace files.
  - Your applications support files of any size and type.
  - To keep it interesting, use UDP combined with an ARQ protocol.
  You are not allowed to use TCP/IP.
