@@ -13,7 +13,7 @@ slideOptions:
 
 ----
 
-# `NU[4] % 2`
+# `NU[5] % 2`
 # Network Systems
 
 ----
