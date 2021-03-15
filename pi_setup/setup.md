@@ -12,6 +12,7 @@ Clone the [nu-module-2](https://github.com/nedap/nu-module-2) repository:
 
 (This guide assumes your current working directory is the root of that Git workspace.)
 
+(TODO)
 Download the [Raspbian Buster Lite](https://www.raspberrypi.org/downloads/raspbian/) image and flash it onto the SD-card.
 
 Put the SD-card into the Pi, then connect the power supply, keyboard, network cable, and monitor.

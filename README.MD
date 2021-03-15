@@ -1,8 +1,13 @@
 # Module 2 Final Assignment
 
-###### Nedap University 5.0 2019–2021
+###### Nedap University 6.0 2020–2022
 
 ###### Authors
+
+- Wout Slakhorst
+- Jelte Zijlstra
+
+###### Original Authors
 
  - @silvanverschuur
  - @erikhuizinga
@@ -24,8 +29,8 @@ The assignment should be performed individually.
 Discussion about the assignment is allowed, but you should always be able to defend your programming and design choices.
 You've got 11 work days to finish the assignment and demonstrate your final results.
 
-To be able to demonstrate your skills, you will be provided with a Raspberry Pi 3 Model B+ starter kit.
-The Raspberry Pi will be pre-installed with the Raspbian Buster Lite image (a minimal Linux distro without GUI), Java 11 and some other configuration.
+To be able to demonstrate your skills, you will be provided with a Raspberry Pi 4 starter kit.
+The Raspberry Pi will be pre-installed with the Raspberry Pi OS Lite image (a minimal Linux distro without GUI), Java 15 and some other configuration.
 When the device boots, a Wi-Fi access point network is set up.
 The Raspberry Pi setup guide to configure your laptop and communicate with the device can be found further down this document.
 The Wi-Fi network should be used to communicate between your laptop and the Raspberry Pis.
@@ -96,7 +101,7 @@ Assume nothing about the coaches' machines, except that they have JRE/JDK 11 ins
  Test this before submitting your project.
  - A report, see below.
 
-Email your deliverables to nu5coaches@nedap.com, i.e. the report and the link to the final version on GitHub.
+Email your deliverables to nu6coaches@nedap.com, i.e. the report and the link to the final version on GitHub.
 
 ##### Report
 
@@ -108,6 +113,7 @@ Pro tip: [markdowntopdf.com](https://www.markdowntopdf.com)
 
 ## Tournament
 
+(TODO)
 On Friday the 17th of April 2020 we will host a tournament!
 You and your applications will compete against the other competitors' applications.
 The competitor that can transmit a large file without errors in unstable network conditions, which will be provided by the coaches, in the least amount of time wins!
@@ -159,6 +165,7 @@ Use it to keep track of and judge your own progress.
 
 ## Organisational overview Calendar
 
+(TODO)
 | Calendar week | Day            | Time        | Activity                  |
 |---------------|----------------|-------------|---------------------------|
 | 14            | Wed April 1rd  | 13:00–15:00 | Final assignment kickoff  |
@@ -171,8 +178,8 @@ Use it to keep track of and judge your own progress.
 
 ## Image
 
-You will be provided with a Raspberry Pi 3B+ starter kit.
-The Pi is pre-installed with the latest Raspbian image.
+You will be provided with a Raspberry Pi 4 starter kit.
+The Pi is pre-installed with the latest Raspberry Pi OS image.
 This is a minimal Linux distribution without a graphical interface.
 
 A Java SDK is also installed.
