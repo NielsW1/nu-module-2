@@ -105,18 +105,18 @@ Email your deliverables to nu6coaches@nedap.com, i.e. the report and the link to
 
 ##### Report
 
-This assignment is a lot of work, therefore we do not want you to focus to much on the meta part of the process.
+This assignment is a lot of work, therefore we do not want you to focus too much on the meta part of the process.
 You do have to write a report.
 The purpose of your report should be to explain the protocol you designed and how you got to the values of the several parameters.
-E-mail your report to nu5coaches@nedap.com as a PDF.
+The report should also include the baseline statistics for transferring the files listed in `example_files`. The statistics should include total transmission time, packet loss, retransmissions for both up- and download. You're allowed to use the best setup possible.
+E-mail your report to nu6coaches@nedap.com as a PDF.
 Pro tip: [markdowntopdf.com](https://www.markdowntopdf.com)
 
 ## Tournament
 
-(TODO)
-On Friday the 17th of April 2020 we will host a tournament!
+On Thursday the 15th of April 2021 we will host a tournament!
 You and your applications will compete against the other competitors' applications.
-The competitor that can transmit a large file without errors in unstable network conditions, which will be provided by the coaches, in the least amount of time wins!
+The competitor that can transmit a large file without errors in unstable network conditions, which will be provided by the coaches, in the least amount of time wins! Since this is the Corona edition, unstable conditions will be artificial.
 There will be a grand prize for the winner.
 
 ## Evaluation
@@ -163,15 +163,6 @@ Use it to keep track of and judge your own progress.
  - All classes in the system have been tested by unit testing.
  - All tests pass.
 
-## Organisational overview Calendar
-
-(TODO)
-| Calendar week | Day            | Time        | Activity                  |
-|---------------|----------------|-------------|---------------------------|
-| 14            | Wed April 1rd  | 13:00–15:00 | Final assignment kickoff  |
-| 16            | Thu April 16th | 23:59       | Deadline for deliverables |
-| 16            | Fri April 17th | 13:00–16:00 | Tournament and review     |
-
 ---
 
 # Raspberry Pi Setup Guide
@@ -212,7 +203,7 @@ The name of the Wi-Fi network is unique for each participant.
 The raspberry Pi is configured to start a DHCP server on the Wi-Fi interface.
 Your computer will automatically get an IP address from the Pi (range 172.16.1.2–172.16.1.100).
 
- - SSID: `nu-pi-$name`
+ - SSID: `nu-pi`
  - Security: `WPA2`
  - Wi-Fi password: `nedap1234`
  - Static IP address: `172.16.1.1`
