@@ -4,8 +4,8 @@
 
 ###### Authors
 
-- Wout Slakhorst
 - Jelte Zijlstra
+- Wout Slakhorst
 
 ###### Original Authors
 
@@ -27,10 +27,10 @@ For this assignment you will create a wireless storage medium, think of it like 
 
 The assignment should be performed individually.
 Discussion about the assignment is allowed, but you should always be able to defend your programming and design choices.
-You've got 11 work days to finish the assignment and demonstrate your final results.
+You've got about 2 weeks to finish the assignment and demonstrate your final results.
 
 To be able to demonstrate your skills, you will be provided with a Raspberry Pi 4 starter kit.
-The Raspberry Pi will be pre-installed with the Raspberry Pi OS Lite image (a minimal Linux distro without GUI), Java 15 and some other configuration.
+The Raspberry Pi will have to be installed with the Raspberry Pi OS Lite image (a minimal Linux distro without GUI), Java 11 and some other configuration.
 When the device boots, a Wi-Fi access point network is set up.
 The Raspberry Pi setup guide to configure your laptop and communicate with the device can be found further down this document.
 The Wi-Fi network should be used to communicate between your laptop and the Raspberry Pis.
@@ -99,18 +99,21 @@ Assume nothing about the coaches' machines, except that they have JRE/JDK 11 ins
  - Any necessary but non-standard predefined classes and libraries should be included in JARs.
  - Typical causes that make the installation and compilation procedure fail are names and paths or hardcoded URLs, so make sure to not use any.
  Test this before submitting your project.
- - A report, see below.
+ - A report and presentation, see below.
 
 Email your deliverables to nu6coaches@nedap.com, i.e. the report and the link to the final version on GitHub.
 
-##### Report
+##### Report & Presentation
 
 This assignment is a lot of work, therefore we do not want you to focus too much on the meta part of the process.
 You do have to write a report.
 The purpose of your report should be to explain the protocol you designed and how you got to the values of the several parameters.
-The report should also include the baseline statistics for transferring the files listed in `example_files`. The statistics should include total transmission time, packet loss, retransmissions for both up- and download. You're allowed to use the best setup possible.
+The report should also include the baseline statistics for transferring the files listed in `example_files`. The statistics should include total transmission time, packet loss, retransmissions for both up- and download. You're allowed to use the best setup possible (distance, absence of walls, etc).
 E-mail your report to nu6coaches@nedap.com as a PDF.
 Pro tip: [markdowntopdf.com](https://www.markdowntopdf.com)
+
+An abstract of your report will have to be presented to the coaches and other candidates. Focus on the protocol and other cool technicalities.
+You'll get 10 minutes for the presentation and 5 minutes for questions.
 
 ## Tournament
 
@@ -123,7 +126,7 @@ There will be a grand prize for the winner.
 
 The minimal requirements as outlined in this report are required to achieve a positive evaluation that will let you pass the project.
 If your implementation exceeds the minimum requirements the evaluation will be even better!
-The coaches will, together, review your applications, report and tournament results on the final tournament day.
+The coaches will, together, review your applications, report, presentation and tournament results on the final tournament day.
 
 ## Criteria
 
@@ -138,7 +141,7 @@ Use it to keep track of and judge your own progress.
  - The application has been sufficiently documented with Javadoc.
  - The implementation of large and/or complex methods has been documented internally.
  - The application layout/design is understandable and accessible.
- - Bytecode of predefined, external, non-standard Java classes is submitted with the code.
+ - Bytecode of predefined, external, non-standard Java classes is submitted with the code. (jars)
 
 ##### Programming Style
 
@@ -170,10 +173,8 @@ Use it to keep track of and judge your own progress.
 ## Image
 
 You will be provided with a Raspberry Pi 4 starter kit.
-The Pi is pre-installed with the latest Raspberry Pi OS image.
-This is a minimal Linux distribution without a graphical interface.
-
-A Java SDK is also installed.
+`pi_setup/setup.md` contains the description on how to setup the Pi.
+If you run into problems with this step, immediately ask for help!
 
 To connect to the Pi you can use any SSH client.
 The default credentials are:
