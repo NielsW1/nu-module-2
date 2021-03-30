@@ -204,7 +204,7 @@ The name of the Wi-Fi network is unique for each participant.
 The raspberry Pi is configured to start a DHCP server on the Wi-Fi interface.
 Your computer will automatically get an IP address from the Pi (range 172.16.1.2–172.16.1.100).
 
- - SSID: `nu-pi`
+ - SSID: `nu-pi-$name`
  - Security: `WPA2`
  - Wi-Fi password: `nedap1234`
  - Static IP address: `172.16.1.1`
