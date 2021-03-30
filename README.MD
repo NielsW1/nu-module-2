@@ -4,7 +4,7 @@
 
 ###### Authors
 
-- Jelte Zijlstra
+- Jelte Zeilstra
 - Wout Slakhorst
 
 ###### Original Authors
