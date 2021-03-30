@@ -2,7 +2,7 @@
 
 ----
 
-# `NU[5] % 2`
+# `NU[6] % 2`
 # Network Systems
 
 ----
@@ -14,7 +14,7 @@ Bouw je eigen file client en server over UDP
 ----
 
 # Gebruik een
-# Raspberry Pi 3B+
+# Raspberry Pi 4
 
 Meer info: raspberrypi.org
 
