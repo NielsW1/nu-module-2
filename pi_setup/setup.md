@@ -82,8 +82,8 @@ Once again, restart the Pi:
 
 ### On your laptop
 
-Connect to the Wi-Fi network `nu-pi-{name}`. If you don't see the accesspoint you may need to disable and re-enable
-the Wi-Fi on your laptop.
+Connect to the Wi-Fi network `nu-pi-{name}`. The default password is `nedap1234`. If you don't see the accesspoint you
+may need to disable and re-enable the Wi-Fi on your laptop.
 
 Build and deploy the sample project `NUM2.jar`:
 
