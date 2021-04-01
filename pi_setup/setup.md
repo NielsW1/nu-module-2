@@ -89,6 +89,9 @@ Build and deploy the sample project `NUM2.jar`:
 
 `./gradlew deploy`
 
+*Note:* We just found out that this command might not work with Java 15. You can switch to Java 11 (if you have that 
+installed) with the command `export JAVA_HOME=$(/usr/libexec/java_home -v11)`.
+
 ### On the Pi
 
 Check that the `NUM2.jar` was copied:
