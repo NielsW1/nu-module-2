@@ -64,8 +64,8 @@ Host 10.10.10.10 172.16.1.1
 
 If you copied the setup.sh file using a Windows system, you may need to execute the following two steps:
 
-* Change the line endings from Windows style (CRLF) to Unix style (LF). This can be done by a text editor.
-  (TODO: Find a command linen command to do this)
+* Change the line endings from Windows style (CRLF) to Unix style (LF). This can be done by a text editor or with the 
+  command `sed -i 's/\r$//' setup.sh`.
 * Mark the file as executable. This can be done with the command `chmod +x setup.sh`.
 
 Check that the network connection is working, then execute the setup script:
