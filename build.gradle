@@ -9,7 +9,7 @@
 
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
     }
 }
 
@@ -30,7 +30,7 @@ version = '0.0.1'
 jar {
     manifest {
         attributes 'Implementation-Title': 'Nedap University Module 2 Sample Project',
-                'Implementation-Version': version,
+                'Implementation-Version': archiveVersion,
                 'Main-Class': mainClassName
     }
 }
