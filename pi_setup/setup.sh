@@ -7,7 +7,7 @@
 apt-get update
 apt-get -y upgrade
 
-apt-get -y install default-jdk
+apt-get -y install openjdk-17-jdk
 
 cat >>/etc/dhcpcd.conf <<EOL
 interface wlan0
