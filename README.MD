@@ -1,17 +1,19 @@
 # Module 2 Final Assignment
 
-###### Nedap University 6.0 2020–2022
+###### Nedap University 7.0 2021–2023
 
 ###### Authors
+- Thomas Burghout
+- Hendrik van der Linde
 
-- Jelte Zeilstra
-- Wout Slakhorst
-
-###### Original Authors
-
- - @silvanverschuur
- - @erikhuizinga
- - @stefan-dijkstra-nedap
+###### Previous Authors
+* NU 6.0:
+	- Jelte Zeilstra
+	- Wout Slakhorst
+* Original Authors:
+	 - @silvanverschuur
+ 	- @erikhuizinga
+ 	- @stefan-dijkstra-nedap
 
 ## Introduction
 
@@ -30,9 +32,8 @@ Discussion about the assignment is allowed, but you should always be able to def
 You've got about 2 weeks to finish the assignment and demonstrate your final results.
 
 To be able to demonstrate your skills, you will be provided with a Raspberry Pi 4 starter kit.
-The Raspberry Pi will have to be installed with the Raspberry Pi OS Lite image (a minimal Linux distro without GUI), Java 11 and some other configuration.
-When the device boots, a Wi-Fi access point network is set up.
-The Raspberry Pi setup guide to configure your laptop and communicate with the device can be found further down this document.
+The Raspberry Pi will have to be installed with the Raspberry Pi OS Lite image (a minimal Linux distro without GUI). Other installation is done according to the [setup guide](pi_setup/setup.md).
+
 The Wi-Fi network should be used to communicate between your laptop and the Raspberry Pis.
 
 ## Requirements
@@ -40,27 +41,29 @@ The Wi-Fi network should be used to communicate between your laptop and the Rasp
 The application you will be making consists of two parts:
 
  0. a storage application (server) on the Raspberry Pi
- 0. a desktop / laptop client which connects to the Pi
+ 0. a client application which connects to the Pi, running from a laptop
 
 ##### Minimal requirements
 
- - You should be able to upload and download files from the client to the Raspberry Pi Server.
- - The client should allow you to remove or replace files.
+ - You must be able to upload and download files from the client to the Raspberry Pi Server.
+ - The client must allow you to remove or replace files.
  - Your applications support files of any size and type.
- - To keep it interesting, use UDP combined with an ARQ protocol.
- You are not allowed to use TCP/IP.
- - The client should be able to ask for and list all available files on the Raspberry Pi.
- - You should be able to pause and resume downloads at any time.
- - Any errors or failures should be handled gracefully.
- - The server should be able to transfer several files at the same time.
- Under what circumstances can this improve or deteriorate the total transfer speed / quality?
- - You should be able to prove that the file you download from the server is exactly the same as the one on the server, and the other way around (data integrity).
- - Your client should be able to discover the server on a local network without knowing its IP address.
- - Your client should be able to show statistics about total transmission time, download speed, packet loss, retransmissions, etc.
+ - The user can control the client through a textual interface.
+ - To keep it interesting, use UDP combined with an ARQ protocol. You are not allowed to use TCP/IP.
+ - In case of an unreliable network, the file transfer should eventually be successful. The protocol must be fault-tolerant.
+ - The client must be able to ask for and list all available files on the Raspberry Pi.
+ - Any errors or failures must be handled gracefully.
+ - You must be able to prove that the file you download from the server is exactly the same as the one on the server, and the other way around (data integrity).
  - *Have fun!*
 
-##### Stretch goals (bonus)
+##### Extra requirements
+ - Your client should be able to show statistics about total transmission time, download speed, packet loss, retransmissions, etc.
+ - Your client should be able to discover the server on a local network without knowing its IP address.
+ - You should be able to pause and resume downloads at any time.
+ - The server should be able to transfer several files at the same time. Under what circumstances can this improve or deteriorate the total transfer speed / quality?
 
+
+##### Stretch goals (bonus)
  - Compressed file transfer.
  Hint: transmission speeds can improve when using compression.
  However, strong compression algorithms might not be quick for some files, resulting in lower total throughput.
@@ -80,19 +83,19 @@ The application you will be making consists of two parts:
  Manage this.
  - Server statistics: your server could keep track of stats per client, file, session, etc. in some human-readable format.
 
-##### Deliverables
+## Deliverables
 
  - During development you should work with version control in Git.
  - Keep your code in a repository via GitHub.
- - The repo must be accessible to the coaches (or just make it public).
+ - The repo must be accessible to the coaches.
  - Tag your final version on GitHub.
  - Pro tip: try working with branches and pull requests!
  - A `git clone` of your project on your final revision must be runnable out of the box
 For example, a Gradle or Maven command that needs to be run is acceptable.
 Missing dependencies, compilation errors, etc. are not!
-Assume nothing about the coaches' machines, except that they have JRE/JDK 11 installed.
+Assume nothing about the coaches' machines, except that they have JRE/JDK 17 installed.
  - The project should have the following content and structure:
-   - There is a README file in the project root with instructions how to install and start the applications (clients and servers).
+   - There is a README file in the project root with instructions how to install and start the applications (clients and servers). You can replace this file.
    - Think about which directories and files are necessary, and any pre-conditions that should be met for successful installation.
    - After reading this file, someone unfamiliar with the project should be able to install and execute the application and transfer files without any problem.
    Hint: to verify your README contains all the required steps, checkout your project into a new directory on a different client and server than your own and follow the instructions yourself.
@@ -101,25 +104,25 @@ Assume nothing about the coaches' machines, except that they have JRE/JDK 11 ins
  Test this before submitting your project.
  - A report and presentation, see below.
 
-Email your deliverables to nu6coaches@nedap.com, i.e. the report and the link to the final version on GitHub.
+Email your deliverables to nu7coaches@nedap.com, i.e. the report and the link to the final version on GitHub.
 
-##### Report & Presentation
+### Report & Presentation
 
 This assignment is a lot of work, therefore we do not want you to focus too much on the meta part of the process.
 You do have to write a report.
 The purpose of your report should be to explain the protocol you designed and how you got to the values of the several parameters.
 The report should also include the baseline statistics for transferring the files listed in `example_files`. The statistics should include total transmission time, packet loss, retransmissions for both up- and download. You're allowed to use the best setup possible (distance, absence of walls, etc).
-E-mail your report to nu6coaches@nedap.com as a PDF.
-Pro tip: [markdowntopdf.com](https://www.markdowntopdf.com)
+E-mail your report to nu7coaches@nedap.com as a PDF.
+
 
 An abstract of your report will have to be presented to the coaches and other candidates. Focus on the protocol and other cool technicalities.
 You'll get 10 minutes for the presentation and 5 minutes for questions.
 
 ## Tournament
 
-On Thursday the 15th of April 2021 we will host a tournament!
+On Thursday the 21th of April 2022 we will host a tournament!
 You and your applications will compete against the other competitors' applications.
-The competitor that can transmit a large file without errors in unstable network conditions, which will be provided by the coaches, in the least amount of time wins! Since this is the Corona edition, unstable conditions will be artificial.
+The competitor that can transmit a large file without errors in unstable network conditions, which will be provided by the coaches, in the least amount of time wins! Unstable conditions will be artificial.
 There will be a grand prize for the winner.
 
 ## Evaluation
@@ -128,7 +131,7 @@ The minimal requirements as outlined in this report are required to achieve a po
 If your implementation exceeds the minimum requirements the evaluation will be even better!
 The coaches will, together, review your applications, report, presentation and tournament results on the final tournament day.
 
-## Criteria
+### Criteria
 
 The list of criteria below will be used to evaluate your project.
 Use it to keep track of and judge your own progress.
@@ -141,7 +144,8 @@ Use it to keep track of and judge your own progress.
  - The application has been sufficiently documented with Javadoc.
  - The implementation of large and/or complex methods has been documented internally.
  - The application layout/design is understandable and accessible.
- - Bytecode of predefined, external, non-standard Java classes is submitted with the code. (jars)
+ - Bytecode of predefined, external, non-standard Java classes is submitted with the code (jars), or as Gradle dependencies.
+ - Dependencies should be clearly motivated in your report.
 
 ##### Programming Style
 
@@ -168,12 +172,12 @@ Use it to keep track of and judge your own progress.
 
 ---
 
-# Raspberry Pi Setup Guide
+# Raspberry Pi Usage Guide
 
 ## Image
 
 You will be provided with a Raspberry Pi 4 starter kit.
-`pi_setup/setup.md` contains the description on how to setup the Pi.
+[setup.md](pi_setup/setup.md) contains the description on how to setup the Pi. Before reading any further, follow the steps in that guide to set it up correctly for this assignment.
 If you run into problems with this step, immediately ask for help!
 
 To connect to the Pi you can use any SSH client.
@@ -222,16 +226,3 @@ Replace the password on the following line:
 The `nedap/nu-module-2` repo on GitHub contains a sample setup of a Gradle project in the repo root.
 It contains a task to automatically send a JAR to the Raspberry Pi over SSH: `./gradlew deploy` (on unix/linux systems).
 You can get the status of your deployed application from the Pi using the `status` task.
-
----
-
-## Presentation
-
-Using [Docker Compose](https://docs.docker.com/compose/install/), from `./presentation` run
-
-```
-docker-compose up
-```
-
-to run the presentation server.
-Browse to `localhost:8000` to view the presentation.
