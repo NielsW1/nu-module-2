@@ -19,6 +19,15 @@ plugins {
     id 'application'
 }
 
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+}
+
+test {
+    useJUnitPlatform()
+    maxHeapSize = '1G'
+}
+
 // Global settings
 ssh.settings {
   knownHosts = allowAnyHosts // Disable host key verification
