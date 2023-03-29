@@ -30,7 +30,7 @@ test {
 
 // Global settings
 ssh.settings {
-  knownHosts = allowAnyHosts // Disable host key verification
+    knownHosts = allowAnyHosts // Disable host key verification
 }
 
 mainClassName = 'com.nedap.university.Main'
@@ -72,6 +72,10 @@ task deploy {
             }
         }
     }
+}
+
+run {
+    standardInput = System.in
 }
 
 deploy.dependsOn jar
