@@ -1,12 +1,15 @@
 # Module 2 Final Assignment
 
-###### Nedap University 7.0 2021–2023
+###### Nedap University 7.0 2022–2024
 
 ###### Authors
-- Thomas Burghout
-- Hendrik van der Linde
+- Stijn Wopereis
+- Tessa Gerritse
 
 ###### Previous Authors
+* NU 7.0:
+    - Thomas Burghout
+    - Hendrik van der Linde
 * NU 6.0:
 	- Jelte Zeilstra
 	- Wout Slakhorst
@@ -19,7 +22,8 @@
 
 Time flies, and we already arrived at the end of the second module of the Nedap University.
 In the last few weeks you learned all the ins and outs about the fascinating subject of networking.
-This assignment gives you the chance to combine your programming skills from the previous module with all this cool networking knowledge!
+This assignment gives you the chance to combine your programming skills from the previous module with all this cool 
+networking knowledge!
 
 ## Summary
 
@@ -104,24 +108,23 @@ Assume nothing about the coaches' machines, except that they have JRE/JDK 17 ins
  Test this before submitting your project.
  - A report and presentation, see below.
 
-Email your deliverables to nu7coaches@nedap.com, i.e. the report and the link to the final version on GitHub.
+Email your deliverables to nu8coaches@nedap.com, i.e. the report and the link to the final version on GitHub.
 
-### Report & Presentation
+### Report
 
 This assignment is a lot of work, therefore we do not want you to focus too much on the meta part of the process.
 You do have to write a report.
 The purpose of your report should be to explain the protocol you designed and how you got to the values of the several parameters.
 The report should also include the baseline statistics for transferring the files listed in `example_files`. The statistics should include total transmission time, packet loss, retransmissions for both up- and download. You're allowed to use the best setup possible (distance, absence of walls, etc).
-E-mail your report to nu7coaches@nedap.com as a PDF.
 
+## Presentation & Tournament
 
-An abstract of your report will have to be presented to the coaches and other candidates. Focus on the protocol and other cool technicalities.
+On Friday the 21st of April 2023 you'll present your report to the coaches and other candidates and we will host a tournament!
+
+In your presentation, focus on the protocol and other cool technicalities.
 You'll get 10 minutes for the presentation and 5 minutes for questions.
 
-## Tournament
-
-On Thursday the 21th of April 2022 we will host a tournament!
-You and your applications will compete against the other competitors' applications.
+Afterwards, you and your applications will compete against the other competitors' applications.
 The competitor that can transmit a large file without errors in unstable network conditions, which will be provided by the coaches, in the least amount of time wins! Unstable conditions will be artificial.
 There will be a grand prize for the winner.
 
@@ -180,7 +183,7 @@ You will be provided with a Raspberry Pi 4 starter kit.
 [setup.md](pi_setup/setup.md) contains the description on how to setup the Pi. Before reading any further, follow the steps in that guide to set it up correctly for this assignment.
 If you run into problems with this step, immediately ask for help!
 
-To connect to the Pi you can use any SSH client.
+To connect to the Pi you can use any SSH client (`ssh pi@[IP address of pi]`).
 The default credentials are:
  - Username: `pi`
  - Password: `raspberry`
@@ -215,7 +218,7 @@ Your computer will automatically get an IP address from the Pi (range 172.16.1.2
 
 We recommend you to change the Wi-Fi password once you're connected to the Pi. This can be done by editing the following file:
 
-`sudo vim /etc/hostapd/hostapd.conf`
+`sudo nano /etc/hostapd/hostapd.conf`
 
 Replace the password on the following line:
 

@@ -116,5 +116,3 @@ The service is automatically started at boot. You can manually start/stop the se
 If you modify the service configuration you have to reload the configuration:
 
 `sudo systemctl daemon-reload`
-
-See also [this resource](http://www.diegoacuna.me/how-to-run-a-script-as-a-service-in-raspberry-pi-raspbian-jessie/) about running scripts as services.
