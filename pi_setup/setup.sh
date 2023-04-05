@@ -7,7 +7,15 @@
 apt-get update
 apt-get -y upgrade
 
-apt-get -y install openjdk-17-jdk
+# Get the latest JDK from https://bell-sw.com/pages/downloads/
+# Make sure to check the operation system bitness 32/64 (getconf LONG_BIT)
+wget https://download.bell-sw.com/java/19.0.2+9/bellsoft-jdk19.0.2+9-linux-arm32-vfp-hflt-full.deb
+apt -y install ./bellsoft-jdk19.0.2+9-linux-arm32-vfp-hflt-full.deb
+
+cat <<EOF | sudo tee /etc/profile.d/jdk.sh
+export JAVA_HOME=/usr/lib/jvm/bellsoft-java19-full-arm32-vfp-hflt/
+export PATH=\$PATH:\$JAVA_HOME/bin
+EOF
 
 cat >>/etc/dhcpcd.conf <<EOL
 interface wlan0
