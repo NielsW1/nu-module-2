@@ -3,10 +3,13 @@
 ###### Nedap University 7.0 2022–2024
 
 ###### Authors
-- Stijn Wopereis
-- Tessa Gerritse
+- Jasper Pluijmers
+- Björn Jongkind-Hollander
 
 ###### Previous Authors
+* NU 8.0:
+    - Stijn Wopereis
+    - Tessa Gerritse
 * NU 7.0:
     - Thomas Burghout
     - Hendrik van der Linde
@@ -35,7 +38,7 @@ The assignment should be performed individually.
 Discussion about the assignment is allowed, but you should always be able to defend your programming and design choices.
 You've got about 2 weeks to finish the assignment and demonstrate your final results.
 
-To be able to demonstrate your skills, you will be provided with a Raspberry Pi 4 starter kit.
+To be able to demonstrate your skills, you will be provided with a Raspberry Pi 5 starter kit.
 The Raspberry Pi will have to be installed with the Raspberry Pi OS Lite image (a minimal Linux distro without GUI). Other installation is done according to the [setup guide](pi_setup/setup.md).
 
 The Wi-Fi network should be used to communicate between your laptop and the Raspberry Pis.
@@ -179,7 +182,7 @@ Use it to keep track of and judge your own progress.
 
 ## Image
 
-You will be provided with a Raspberry Pi 4 starter kit.
+You will be provided with a Raspberry Pi 5 starter kit.
 [setup.md](pi_setup/setup.md) contains the description on how to setup the Pi. Before reading any further, follow the steps in that guide to set it up correctly for this assignment.
 If you run into problems with this step, immediately ask for help!
 
