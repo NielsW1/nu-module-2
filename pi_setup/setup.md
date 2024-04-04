@@ -10,37 +10,26 @@ Clone the [nu-module-2](https://github.com/nedap/nu-module-2) repository:
 
 (This guide assumes your current working directory is the root of that Git workspace.)
 
+Go to [Raspberry Pi OS](https://www.raspberrypi.com/software/) to download the Raspberry Pi Imager and use it to install Raspberry Pi OS (Lite) 64-bit on your SD card. 
+You can either install Raspberry Pi OS (1.1GB, with Raspberry Pi Desktop) or Raspberry Pi OS Lite (0.4GB, no desktop environment).
+
+Installation steps:
+* Run the Raspberry Pi Imager
+* Select your Raspberry Pi Device, choose your preferred Raspberry Pi OS and select the SD card as storage
+* Click Next
+* Click _Edit Settings_ to add OS customisations
+  * Under the _General_ tab:
+    * Check _Set hostname_ and enter `nu-pi-{name}` (For `{name}`, insert your name, e.g. `bob`, to personalize the Pi's hostname)
+    * Check _Set username and password_ with Username `pi` and Password `raspberry`
+    * **DO NOT** configure wireless LAN, this will be handled later with a custom script!
+    * Check _Set locale settings_ with Time zone `Europe/Amsterdam` and Keyboard layout `us`
+  * Under the _Services_ tab:
+    * Check _Enable SSH_ with _Use password authentication_
+* Click Save
+* Click _Yes_ to use the OS customisation settings
+* Click _Yes_ to continue (will erase your SD) and wait for the installation to complete
+
 Put the SD-card into the Pi, then connect the power supply, keyboard, **network cable**, and monitor.
-
-### On the Pi
-
-If you boot your Raspberry Pi for the first time you can choose an operating system to install. This guide assumes
-you install "Raspberry Pi OS Lite", but it should also work with other variants of Raspberry Pi OS. If you don't have 
-the "Raspberry Pi OS Lite" option, your wired network is probably not connected properly.
-
-Log in with the default username/password:
-
-* username: `pi`
-* password: `raspberry`
-
-Or open a terminal if you are using the desktop version.
-
-(This guide assumes your working directory is `~`, a.k.a. `/home/pi`.)
-
-Use `sudo raspi-config` to change the following settings:
-
-* 1 System Options > S4 Hostname > `nu-pi-{name}`<br>(For `{name}`, insert your name, e.g. `robin`, to personalize the Pi's hostname.)
-* 3 Interfacing Options > P2 SSH > `Yes`
-* 5 Localization Options >
-    * I2 Change Timezone > `Europe` > `Amsterdam`
-    * I3 Change Keyboard Layout > `Generic 104-key PC` > (`Other` > `English (US)`) >) `English (US)` > `The default for the keyboard layout` > `No compose key`
-    * I4 Change WLAN Country > `Netherlands`
-
-Close with `<Finish>`. Choose `<Yes>` to reboot.
-
-Restart the Pi:
-
-`sudo reboot`
 
 ### On your laptop
 
@@ -48,8 +37,8 @@ Copy the setup script to the Pi:
 
 `scp pi_setup/setup.sh pi@10.10.10.10:/home/pi`
 
-(When asked, use the password `raspberry` again. The IP-address `10.10.10.10` should be replaced by the Pi's actual 
-wired IP-address, which you can find with the command `ifconfig` on the Pi.)
+When asked, use the password `raspberry` again. The IP-address `10.10.10.10` should be replaced by the Pi's actual 
+wired IP-address, which you can find with the command `ifconfig` on the Pi.
 
 If you get the error `pi@10.10.10.10: Permission denied (publickey,password).` without the option to enter your 
 password, you should add the following two lines to the top of the `.ssh/config` file on your laptop. Replace the 
@@ -72,13 +61,9 @@ Check that the network connection is working, then execute the setup script:
 
 `sudo ./setup.sh {name}`
 
-(For `{name}`, insert your name, e.g. `robin`, to personalize the Pi's Wi-Fi SSID.)
+For `{name}`, insert your name, e.g. `bob`, to personalize the Pi's Wi-Fi SSID.
 
 This script will install all the required software and will configure the Pi to act as a Wi-Fi accesspoint.
-
-Once again, restart the Pi:
-
-`sudo reboot`
 
 ### On your laptop
 
