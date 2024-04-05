@@ -65,6 +65,8 @@ For `{name}`, insert your name, e.g. `bob`, to personalize the Pi's Wi-Fi SSID.
 
 This script will install all the required software and will configure the Pi to act as a Wi-Fi accesspoint.
 
+After the installation, reboot your Pi: `sudo reboot`
+
 ### On your laptop
 
 Connect to the Wi-Fi network `nu-pi-{name}`. The default password is `nedap1234`. If you don't see the accesspoint you
