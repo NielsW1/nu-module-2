@@ -49,6 +49,17 @@ wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOL
 
+cat >/etc/network/interfaces.d/wlan0 <<EOL
+auto wlan0
+iface wlan0 inet static
+address 172.16.1.1
+netmask 255.255.255.0
+gateway 172.16.1.1
+broadcast 172.16.1.255
+EOL
+
+raspi-config nonint do_wifi_country NL
+
 /bin/sed -i 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/g' /etc/default/hostapd
 
 systemctl unmask hostapd
