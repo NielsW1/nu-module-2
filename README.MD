@@ -39,7 +39,7 @@ Discussion about the assignment is allowed, but you should always be able to def
 You've got about 2 weeks to finish the assignment and demonstrate your final results.
 
 To be able to demonstrate your skills, you will be provided with a Raspberry Pi 5 starter kit.
-The Raspberry Pi will have to be installed with the Raspberry Pi OS Lite image (a minimal Linux distro without GUI). Other installation is done according to the [setup guide](pi_setup/setup.md).
+Installation is done according to the [setup guide](pi_setup/setup.md).
 
 The Wi-Fi network should be used to communicate between your laptop and the Raspberry Pis.
 
@@ -111,7 +111,7 @@ Assume nothing about the coaches' machines, except that they have JRE/JDK 17 ins
  Test this before submitting your project.
  - A report and presentation, see below.
 
-Email your deliverables to nu8coaches@nedap.com, i.e. the report and the link to the final version on GitHub.
+Email your deliverables to your coach, i.e. the report and the link to the final version on GitHub.
 
 ### Report
 
@@ -122,7 +122,7 @@ The report should also include the baseline statistics for transferring the file
 
 ## Presentation & Tournament
 
-On Friday the 21st of April 2023 you'll present your report to the coaches and other candidates and we will host a tournament!
+On Friday the 26th of April 2024 you'll present your report to the coaches and other candidates and we will host a tournament!
 
 In your presentation, focus on the protocol and other cool technicalities.
 You'll get 10 minutes for the presentation and 5 minutes for questions.
