@@ -1,3 +1,5 @@
+package com.nedap.university.server;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -10,7 +12,7 @@ import java.util.*;
  */
 public class QuoteServer {
     private DatagramSocket socket;
-    private List<String> listQuotes = new ArrayList<String>();
+    private List<String> listQuotes = new ArrayList<>();
     private Random random;
  
     public QuoteServer(int port) throws SocketException {
@@ -23,10 +25,10 @@ public class QuoteServer {
             System.out.println("Syntax: QuoteServer <file> <port>");
             return;
         }
- 
+
         String quoteFile = args[0];
         int port = Integer.parseInt(args[1]);
- 
+
         try {
             QuoteServer server = new QuoteServer(port);
             server.loadQuotesFromFile(quoteFile);
@@ -38,7 +40,7 @@ public class QuoteServer {
         }
     }
  
-    private void service() throws IOException {
+    public void service() throws IOException {
         while (true) {
             DatagramPacket request = new DatagramPacket(new byte[1], 1);
             socket.receive(request);
@@ -53,15 +55,14 @@ public class QuoteServer {
             socket.send(response);
         }
     }
- 
-    private void loadQuotesFromFile(String quoteFile) throws IOException {
+
+    public void loadQuotesFromFile(String quoteFile) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(quoteFile));
         String aQuote;
  
         while ((aQuote = reader.readLine()) != null) {
             listQuotes.add(aQuote);
         }
- 
         reader.close();
     }
  
