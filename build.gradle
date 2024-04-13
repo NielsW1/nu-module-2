@@ -6,11 +6,7 @@
  * For more details take a look at the Java Quickstart chapter in the Gradle
  * user guide available at https://docs.gradle.org/2.10/userguide/tutorial_java_projects.html
  */
-
 buildscript {
-    repositories {
-        mavenCentral()
-    }
 }
 
 plugins {
@@ -19,9 +15,16 @@ plugins {
     id 'application'
 }
 
-dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+repositories {
+    mavenCentral()
 }
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+}
+
 
 test {
     useJUnitPlatform()
