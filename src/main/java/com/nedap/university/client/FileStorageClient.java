@@ -36,34 +36,42 @@ public class FileStorageClient {
           try {
             command = Integer.parseInt(inputLine);
           } catch (NumberFormatException e) {
-            System.out.println("Invalid input!");
+            System.out.println("Invalid input: " + inputLine);
             continue;
           }
           if (command == 3) {
-            System.out.println("Goodbye!");
+            System.out.println("Exiting client.....");
             break;
           }
-          switch(command) {
-            case 1:
-              System.out.println("Enter the path to the file (e.g /users/user/documents/file.pdf)");
-              if (input.hasNextLine()) {
-                inputLine = input.nextLine();
-                clientHandler.sendFile(inputLine);
-              }
-              break;
-            case 2:
-              clientHandler.retrieveFile();
-              break;
-            default:
-              System.out.println("Invalid input!");
-              continue;
+          try {
+            switch (command) {
+              case 1:
+                System.out.println(
+                    "Enter the path to the file (e.g /users/user/documents/file.pdf):");
+                if (input.hasNextLine()) {
+                  clientHandler.sendFile(input.nextLine());
+                }
+                break;
+              case 2:
+                System.out.println("Enter the name of the file you want to retrieve:");
+                if (input.hasNextLine()) {
+                  clientHandler.retrieveFile(input.nextLine());
+                }
+                break;
+              default:
+                System.out.println("Invalid input: " + command);
+                continue;
+            }
+          } catch (IOException e) {
+            System.out.println(e.getMessage() + "\n");
+            continue;
           }
           System.out.println("Would you like to send/retrieve another file? (y/n)");
           if (input.hasNextLine()) {
             inputLine = input.nextLine();
             if (inputLine.contains("y")) {
             } else {
-              System.out.println("Goodbye!");
+              System.out.println("Exiting client.....");
               break;
             }
           }
@@ -74,7 +82,7 @@ public class FileStorageClient {
     } catch (SocketException e) {
       System.out.println("Socket error: " + e.getMessage());
     } catch (IOException e) {
-      System.out.println("I/O error:" + e.getMessage());
+      System.out.println("I/O error: " + e.getMessage());
     }
   }
 

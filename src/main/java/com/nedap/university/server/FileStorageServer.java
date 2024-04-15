@@ -13,7 +13,6 @@ public class FileStorageServer {
 
   public FileStorageServer() throws IOException {
     serverHandler = new FileStorageServerHandler();
-    socket = new DatagramSocket(FileStorageServiceHandler.PORT);
   }
 
   public void runServer() throws IOException {
