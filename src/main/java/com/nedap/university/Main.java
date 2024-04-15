@@ -1,5 +1,6 @@
 package com.nedap.university;
 
+import com.nedap.university.server.FileStorageServer;
 import com.nedap.university.server.QuoteServer;
 import java.io.IOException;
 import java.net.SocketException;
@@ -12,10 +13,9 @@ public class Main {
   private Main() {}
 
   public static void main(String[] args) {
-    QuoteServer server = null;
+    FileStorageServer server = null;
     try {
-      server = new QuoteServer(8080);
-      server.loadQuotesFromFile("/home/pi/quotes.txt");
+      server = new FileStorageServer();
     } catch (SocketException e) {
       System.out.println("Socket error: " + e.getMessage());
     } catch (IOException e) {
@@ -29,7 +29,7 @@ public class Main {
     while (keepAlive) {
       try {
         System.out.println("Running service...");
-        server.service();
+        server.runServer();
 //        Thread.sleep(1000);
 //      } catch (InterruptedException) {
 //        Thread.currentThread().interrupt();
