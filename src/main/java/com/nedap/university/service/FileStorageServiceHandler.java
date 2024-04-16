@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -37,10 +39,10 @@ public class FileStorageServiceHandler {
   }
 
   public void sendFile(DatagramSocket socket, String filePath) throws IOException {
-    sendFile(socket, filePath, piAddress, PI_PORT);
+    sendFile(socket, piAddress, PI_PORT, filePath);
   }
 
-  public void sendFile(DatagramSocket socket, String filePath, InetAddress address, int port) throws IOException {
+  public void sendFile(DatagramSocket socket, InetAddress address, int port, String filePath) throws IOException {
     byte[] fileBytes = fileHandler.getFileBytes(filePath);
     Queue<DatagramPacket> packetQueue = packetAssembler.createPacketQueue(address, port, fileBytes);
 
@@ -49,7 +51,7 @@ public class FileStorageServiceHandler {
       int sequenceNumber = packetReader.getSequenceNumber(packetToSend);
 
       while (true) {
-        socket.send(packetToSend);
+        sendPacket(socket, packetToSend);
         DatagramPacket response = awaitResponsePacket(socket);
 
         if (packetReader.hasFlag(response, ERROR)) {
@@ -61,11 +63,12 @@ public class FileStorageServiceHandler {
       }
     }
   }
-  public void receiveFile(DatagramSocket socket) throws IOException {
-    receiveFile(socket, piAddress, PI_PORT);
+
+  public void receiveFile(DatagramSocket socket, String fileName) throws IOException {
+    receiveFile(socket, piAddress, PI_PORT, fileName);
   }
 
-  public void receiveFile(DatagramSocket socket, InetAddress address, int port) throws IOException {
+  public void receiveFile(DatagramSocket socket, InetAddress address, int port, String fileName) throws IOException {
     HashMap<Integer, byte[]> receivedPacketMap = new HashMap<>();
     boolean finalPacket = false;
     int lastSequenceNumber = 0;
@@ -76,7 +79,7 @@ public class FileStorageServiceHandler {
 
       int sequenceNumber = packetReader.getSequenceNumber(receivedPacket);
 
-      if (sequenceNumber > lastSequenceNumber && !receivedPacketMap.containsKey(sequenceNumber)) {
+      if (!receivedPacketMap.containsKey(sequenceNumber)) {
         byte[] payload = packetReader.getPayload(receivedPacket);
         lastSequenceNumber = sequenceNumber;
 
@@ -85,11 +88,12 @@ public class FileStorageServiceHandler {
           finalPacket = true;
         }
         receivedPacketMap.put(sequenceNumber, payload);
-        socket.send(packetAssembler.createAcknowledgementPacket(address, port, sequenceNumber));
+        sendAcknowledgement(socket, packetAssembler.createAcknowledgementPacket(address, port, sequenceNumber));
       } else {
-        socket.send(packetAssembler.createAcknowledgementPacket(address, port, lastSequenceNumber));
+        sendAcknowledgement(socket, packetAssembler.createAcknowledgementPacket(address, port, lastSequenceNumber) );
       }
     }
+    fileHandler.writeBytesToFile(fileHandler.getByteArrayFromMap(receivedPacketMap), fileName);
   }
 
   public DatagramPacket awaitResponsePacket(DatagramSocket socket) throws IOException {
@@ -98,12 +102,23 @@ public class FileStorageServiceHandler {
     return bufferPacket;
   }
 
+  public void sendPacket(DatagramSocket socket, DatagramPacket packet) throws IOException {
+    socket.send(packet);
+    System.out.println(packet.getAddress() + ": Sending packet " + packetReader.getSequenceNumber(packet));
+  }
+
+  public void sendAcknowledgement(DatagramSocket socket, DatagramPacket packet) throws IOException {
+    socket.send(packet);
+    System.out.println(packet.getAddress() + ": Sending ACK " + packetReader.getSequenceNumber(packet));
+  }
+
   public boolean clientHandshake(DatagramSocket socket, String filePath,
       Set<FileStorageHeaderFlags> flagSet) throws IOException {
     int flags = packetAssembler.setFlags(flagSet);
     byte[] requestPacket = fileHandler.getFileNameBytes(filePath);
     requestPacket = packetAssembler.addPacketHeader(requestPacket, 0, flags, requestPacket.length);
     socket.send(new DatagramPacket(requestPacket, requestPacket.length, piAddress, PI_PORT));
+    System.out.println("Request sent!");
 
     DatagramPacket receivedPacket = awaitResponsePacket(socket);
     if (packetReader.hasFlag(receivedPacket, ERROR)) {
@@ -112,7 +127,32 @@ public class FileStorageServiceHandler {
     if (!packetReader.hasFlag(receivedPacket, ACK)) {
       throw new IOException("No acknowledgement received from server");
     }
+    System.out.println("Ack received!");
     return true;
   }
 
+  public void serverHandshake(DatagramSocket socket) throws IOException {
+    DatagramPacket requestPacket = awaitResponsePacket(socket);
+    InetAddress address = requestPacket.getAddress();
+    int port = requestPacket.getPort();
+    String fileName = new String(packetReader.getPayload(requestPacket));
+
+    if (packetReader.hasFlag(requestPacket, MODE)) {
+      if (fileHandler.fileExistsCheck(fileName)) {
+        sendAcknowledgement(socket, packetAssembler.createAcknowledgementPacket(address, port, 0));
+        sendFile(socket, address, port, fileHandler.getFileStoragePath() + "/" + fileName);
+      } else {
+        socket.send(packetAssembler.createErrorPacket(address, port, 0, FileStorageFileHandler.NOT_EXISTS));
+        System.out.println("Sending error: " + FileStorageFileHandler.NOT_EXISTS);
+      }
+    } else {
+      if (!fileHandler.fileExistsCheck(fileName)) {
+        sendAcknowledgement(socket, packetAssembler.createAcknowledgementPacket(address, port, 0));
+        receiveFile(socket, address, port, fileName);
+      } else {
+        socket.send(packetAssembler.createErrorPacket(address, port, 0, FileStorageFileHandler.EXISTS));
+        System.out.println("Sending error: " + FileStorageFileHandler.EXISTS);
+      }
+    }
+  }
 }

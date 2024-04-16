@@ -30,17 +30,19 @@ public class FileStoragePacketAssembler {
 
     for (int i = 0; i < fileBytes.length; i = i + PAYLOAD_SIZE) {
       byte[] packet;
+
       if (i + PAYLOAD_SIZE < fileBytes.length) {
         packet = new byte[PAYLOAD_SIZE];
         System.arraycopy(fileBytes, i, packet, 0, PAYLOAD_SIZE);
-        packet = addPacketHeader(packet, sequenceNumber++, 0, PAYLOAD_SIZE);
+        packet = addPacketHeader(packet, sequenceNumber, 0, PAYLOAD_SIZE);
       } else {
         int finalPacketSize = fileBytes.length - i;
         packet = new byte[finalPacketSize];
         System.arraycopy(fileBytes, i, packet, 0, finalPacketSize);
-        packet = addPacketHeader(packet, sequenceNumber++, setFlags(Set.of(FINAL)), finalPacketSize);
+        packet = addPacketHeader(packet, sequenceNumber, setFlags(Set.of(FINAL)), finalPacketSize);
       }
       packetQueue.add(new DatagramPacket(packet, packet.length, address, port));
+      sequenceNumber++;
     }
     return packetQueue;
   }
@@ -64,11 +66,13 @@ public class FileStoragePacketAssembler {
   public byte[] addPacketHeader(byte[] packet, int sequenceNumber, int flags, int payloadSize) {
     byte[] packetWithHeader = new byte[packet.length + HEADER_SIZE];
 
-    packetWithHeader[0] = (byte) (sequenceNumber >>> 8 & 0xff);
-    packetWithHeader[1] = (byte) (sequenceNumber & 0xff);
-    packetWithHeader[2] = (byte) (payloadSize >>> 8 & 0xff);
-    packetWithHeader[3] = (byte) (payloadSize & 0xff);
-    packetWithHeader[4] = (byte) flags;
+    packetWithHeader[0] = (byte) (sequenceNumber >> 24 & 0xff);
+    packetWithHeader[1] = (byte) (sequenceNumber >> 16 & 0xff);
+    packetWithHeader[2] = (byte) (sequenceNumber >> 8 & 0xff);
+    packetWithHeader[3] = (byte) (sequenceNumber & 0xff);
+    packetWithHeader[4] = (byte) (payloadSize >> 8 & 0xff);
+    packetWithHeader[5] = (byte) (payloadSize & 0xff);
+    packetWithHeader[6] = (byte) flags;
     System.arraycopy(packet, 0, packetWithHeader, HEADER_SIZE, packet.length);
     return packetWithHeader;
   }

@@ -30,9 +30,9 @@ public class FileStorageClientHandler {
     }
   }
 
-  public void retrieveFile(String filePath) throws IOException {
-    if (serviceHandler.clientHandshake(socket, filePath, Set.of(MODE))) {
-      serviceHandler.receiveFile(socket);
+  public void retrieveFile(String fileName) throws IOException {
+    if (serviceHandler.clientHandshake(socket, fileName, Set.of(MODE))) {
+      serviceHandler.receiveFile(socket, fileName);
     }
   }
 }
