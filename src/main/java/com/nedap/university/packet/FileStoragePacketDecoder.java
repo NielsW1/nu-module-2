@@ -1,23 +1,14 @@
 package com.nedap.university.packet;
 
 import com.nedap.university.service.FileStorageServiceHandler;
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
 
-import static com.nedap.university.packet.FileStorageHeaderFlags.ERROR;
-import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
-import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
-import static com.nedap.university.packet.FileStorageHeaderFlags.MODE;
-
-public class FileStoragePacketReader {
+public class FileStoragePacketDecoder {
   int PAYLOAD_SIZE;
   int HEADER_SIZE;
 
-  public FileStoragePacketReader() {
+  public FileStoragePacketDecoder() {
     this.PAYLOAD_SIZE = FileStorageServiceHandler.PAYLOAD_SIZE;
     this.HEADER_SIZE = FileStorageServiceHandler.HEADER_SIZE;
   }

@@ -1,19 +1,15 @@
 package com.nedap.university.service;
 
 
-import com.nedap.university.packet.FileStorageHeaderFlags;
 import com.nedap.university.packet.FileStoragePacketAssembler;
-import com.nedap.university.packet.FileStoragePacketReader;
+import com.nedap.university.packet.FileStoragePacketDecoder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
-import javax.xml.crypto.Data;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PacketTest {
   private FileStoragePacketAssembler packetAssembler;
-  private FileStoragePacketReader packetReader;
+  private FileStoragePacketDecoder packetReader;
   private FileStorageServiceHandler serviceHandler;
   private FileStorageFileHandler fileHandler;
   public static final int PORT = 8080;
@@ -39,7 +35,7 @@ public class PacketTest {
     try {
       address = InetAddress.getByName(HOSTNAME);
       packetAssembler = new FileStoragePacketAssembler();
-      packetReader = new FileStoragePacketReader();
+      packetReader = new FileStoragePacketDecoder();
       serviceHandler = new FileStorageServiceHandler("bla");
       fileHandler = new FileStorageFileHandler("./example_files");
     } catch (IOException e) {
@@ -70,7 +66,6 @@ public class PacketTest {
         receivedPacketMap.put(packetReader.getSequenceNumber(packet), packetReader.getPayload(packet));
       }
       byte[] receivedFileBytes = fileHandler.getByteArrayFromMap(receivedPacketMap);
-      fileHandler.writeBytesToFile(receivedFileBytes, "test.pdf");
       assertEquals(fileBytes.length, receivedFileBytes.length);
     } catch (IOException e) {
       e.printStackTrace();

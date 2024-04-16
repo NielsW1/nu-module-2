@@ -13,8 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class FileStorageFileHandler {
-  public static final String NOT_EXISTS = "File does not exist or is not in this directory";
-  public static final String EXISTS = "File already exists in this directory";
+  public static final String FILE_ERROR = "File does not exist or is not in this directory";
   private final String fileStoragePath;
 
   public FileStorageFileHandler(String fileStoragePath) {
@@ -36,9 +35,17 @@ public class FileStorageFileHandler {
     return fileBytes;
   }
 
-  public void writeBytesToFile(byte[] fileBytes, String fileName) throws IOException {
+  public String writeBytesToFile(byte[] fileBytes, String fileName) throws IOException {
+    int fileNum = 1;
+
+    while (Files.exists(Paths.get(fileStoragePath + "/" + fileName))) {
+      String[] splitFileName = fileName.split("[.]");
+      fileName = splitFileName[0] + "(" + fileNum++ + ")." + splitFileName[1];
+    }
     FileOutputStream outputStream = new FileOutputStream(fileStoragePath + "/" + fileName);
     outputStream.write(fileBytes);
+
+    return fileName;
   }
 
   public byte[] getByteArrayFromMap(HashMap<Integer, byte[]> receivedPacketMap) {
@@ -51,7 +58,7 @@ public class FileStorageFileHandler {
     return combinedArray.toByteArray();
   }
 
-  public boolean fileExistsCheck(String fileName) {
+  public boolean fileExists(String fileName) {
     return Files.exists(Paths.get(fileStoragePath + "/" + fileName));
   }
 

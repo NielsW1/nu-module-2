@@ -34,17 +34,20 @@ public class FileStoragePacketAssembler {
       if (i + PAYLOAD_SIZE < fileBytes.length) {
         packet = new byte[PAYLOAD_SIZE];
         System.arraycopy(fileBytes, i, packet, 0, PAYLOAD_SIZE);
-        packet = addPacketHeader(packet, sequenceNumber, 0, PAYLOAD_SIZE);
+        packet = addPacketHeader(packet, sequenceNumber++, 0, PAYLOAD_SIZE);
       } else {
         int finalPacketSize = fileBytes.length - i;
         packet = new byte[finalPacketSize];
         System.arraycopy(fileBytes, i, packet, 0, finalPacketSize);
-        packet = addPacketHeader(packet, sequenceNumber, setFlags(Set.of(FINAL)), finalPacketSize);
+        packet = addPacketHeader(packet, sequenceNumber++, setFlags(Set.of(FINAL)), finalPacketSize);
       }
       packetQueue.add(new DatagramPacket(packet, packet.length, address, port));
-      sequenceNumber++;
     }
     return packetQueue;
+  }
+
+  public DatagramPacket createDataPacket(byte[] packet, InetAddress address, int port) {
+    return new DatagramPacket(packet, packet.length, address, port);
   }
 
   public DatagramPacket createAcknowledgementPacket(InetAddress address, int port, int sequenceNumber) {

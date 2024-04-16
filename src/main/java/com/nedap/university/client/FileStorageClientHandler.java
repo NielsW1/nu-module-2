@@ -1,6 +1,7 @@
 package com.nedap.university.client;
 
 import com.nedap.university.packet.FileStorageHeaderFlags;
+import com.nedap.university.service.FileStorageFileHandler;
 import com.nedap.university.service.FileStorageServiceHandler;
 import java.io.IOException;
 import java.net.DatagramSocket;
@@ -23,16 +24,20 @@ public class FileStorageClientHandler {
 
   public void sendFile(String filePath) throws IOException {
     if (Files.notExists(Paths.get(filePath))) {
-      throw new IOException("File does not exist or is not in this directory");
+      throw new IOException(FileStorageFileHandler.FILE_ERROR);
     }
     if (serviceHandler.clientHandshake(socket, filePath, new HashSet<>())) {
+      System.out.println("Handshake successful, Sending file...");
       serviceHandler.sendFile(socket, filePath);
+      System.out.println("File sent successfully");
     }
   }
 
   public void retrieveFile(String fileName) throws IOException {
     if (serviceHandler.clientHandshake(socket, fileName, Set.of(MODE))) {
-      serviceHandler.receiveFile(socket, fileName);
+      System.out.println("Handshake successful, retrieving file...");
+      String outputFileName = serviceHandler.receiveFile(socket, fileName);
+      System.out.println("File downloaded to " + System.getProperty("user.home") + "/Downloads/" + outputFileName);
     }
   }
 }

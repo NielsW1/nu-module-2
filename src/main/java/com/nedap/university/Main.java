@@ -1,7 +1,6 @@
 package com.nedap.university;
 
 import com.nedap.university.server.FileStorageServer;
-import com.nedap.university.server.FileStorageServerHandler;
 import com.nedap.university.server.QuoteServer;
 import java.io.IOException;
 import java.net.SocketException;
@@ -14,9 +13,9 @@ public class Main {
   private Main() {}
 
   public static void main(String[] args) {
-    FileStorageServerHandler server = null;
+    FileStorageServer server = null;
     try {
-      server = new FileStorageServerHandler();
+      server = new FileStorageServer();
     } catch (SocketException e) {
       System.out.println("Socket error: " + e.getMessage());
     } catch (IOException e) {
@@ -30,9 +29,9 @@ public class Main {
     while (keepAlive) {
       try {
         server.runServer();
-//        Thread.sleep(1000);
-//      } catch (InterruptedException) {
-//        Thread.currentThread().interrupt();
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
       } catch (IOException e) {
         System.out.println("I/O error: " + e.getMessage());
       } catch (NullPointerException e) {
