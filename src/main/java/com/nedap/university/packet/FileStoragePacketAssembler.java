@@ -4,11 +4,10 @@ import com.nedap.university.service.FileStorageServiceHandler;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
-import javax.xml.crypto.Data;
 
 import static com.nedap.university.packet.FileStorageHeaderFlags.ERROR;
 import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
@@ -19,51 +18,27 @@ public class FileStoragePacketAssembler {
   int PAYLOAD_SIZE;
   int HEADER_SIZE;
 
-  public FileStoragePacketAssembler() {
-    this.PAYLOAD_SIZE = FileStorageServiceHandler.PAYLOAD_SIZE;
-    this.HEADER_SIZE = FileStorageServiceHandler.HEADER_SIZE;
+  private FileStorageServiceHandler serviceHandler;
+
+  public FileStoragePacketAssembler(FileStorageServiceHandler serviceHandler) {
+    PAYLOAD_SIZE = FileStorageServiceHandler.PAYLOAD_SIZE;
+    HEADER_SIZE = FileStorageServiceHandler.HEADER_SIZE;
+    this.serviceHandler = serviceHandler;
   }
 
-  public Queue<DatagramPacket> createPacketQueue(InetAddress address, int port, byte[] fileBytes) throws IOException {
-    Queue<DatagramPacket> packetQueue = new LinkedList<>();
-    int sequenceNumber = 1;
-
-    for (int i = 0; i < fileBytes.length; i = i + PAYLOAD_SIZE) {
-      byte[] packet;
-
-      if (i + PAYLOAD_SIZE < fileBytes.length) {
-        packet = new byte[PAYLOAD_SIZE];
-        System.arraycopy(fileBytes, i, packet, 0, PAYLOAD_SIZE);
-        packet = addPacketHeader(packet, sequenceNumber++, 0, PAYLOAD_SIZE);
-      } else {
-        int finalPacketSize = fileBytes.length - i;
-        packet = new byte[finalPacketSize];
-        System.arraycopy(fileBytes, i, packet, 0, finalPacketSize);
-        packet = addPacketHeader(packet, sequenceNumber++, setFlags(Set.of(FINAL)), finalPacketSize);
-      }
-      packetQueue.add(new DatagramPacket(packet, packet.length, address, port));
-    }
-    return packetQueue;
+  public DatagramPacket createPacket(byte[] payload, int sequenceNumber, int flags) {
+    byte[] packet = addPacketHeader(payload, sequenceNumber, flags, payload.length);
+    return new DatagramPacket(packet, packet.length, serviceHandler.getAddress(), serviceHandler.getPort());
   }
 
-  public DatagramPacket createDataPacket(byte[] packet, InetAddress address, int port) {
-    return new DatagramPacket(packet, packet.length, address, port);
-  }
-
-  public DatagramPacket createAcknowledgementPacket(InetAddress address, int port, int sequenceNumber) {
+  public DatagramPacket createAckPacket(int sequenceNumber) {
     byte[] acknowledgementPacket = addPacketHeader(new byte[1], sequenceNumber, setFlags(ACK), 1);
-    return new DatagramPacket(acknowledgementPacket, acknowledgementPacket.length, address, port);
+    return new DatagramPacket(acknowledgementPacket, acknowledgementPacket.length, serviceHandler.getAddress(),
+        serviceHandler.getPort());
   }
 
-  public DatagramPacket createErrorPacket(InetAddress address, int port, int sequenceNumber, String error) {
-    byte[] errorPacket = error.getBytes();
-    errorPacket = addPacketHeader(errorPacket, sequenceNumber, setFlags(ERROR), errorPacket.length);
-    return new DatagramPacket(errorPacket, errorPacket.length, address, port);
-  }
-
-  public DatagramPacket createBufferPacket() {
-    int packetBufferSize = PAYLOAD_SIZE + HEADER_SIZE;
-    return new DatagramPacket(new byte[packetBufferSize], packetBufferSize);
+  public DatagramPacket createBufferPacket(int bufferSize) {
+    return new DatagramPacket(new byte[bufferSize], bufferSize);
   }
 
   public byte[] addPacketHeader(byte[] packet, int sequenceNumber, int flags, int payloadSize) {

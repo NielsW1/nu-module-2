@@ -35,9 +35,9 @@ public class PacketTest {
   public void setup() {
     try {
       address = InetAddress.getByName(HOSTNAME);
-      packetAssembler = new FileStoragePacketAssembler();
       packetReader = new FileStoragePacketDecoder();
       serviceHandler = new FileStorageServiceHandler("bla");
+      packetAssembler = new FileStoragePacketAssembler(serviceHandler);
       fileHandler = new FileStorageFileHandler("./example_files");
     } catch (IOException e) {
       e.printStackTrace();
@@ -55,25 +55,6 @@ public class PacketTest {
   }
 
   @Test
-  public void testPacketQueue() {
-    try {
-      byte[] fileBytes = fileHandler.getFileBytes("./example_files/large.pdf");
-      Queue<DatagramPacket> packetQueue = packetAssembler.createPacketQueue(address, PORT, fileBytes);
-      HashMap<Integer, byte[]> receivedPacketMap = new HashMap<>();
-
-      System.out.println(packetQueue.size());
-
-      for (DatagramPacket packet : packetQueue) {
-        receivedPacketMap.put(packetReader.getSequenceNumber(packet), packetReader.getPayload(packet));
-      }
-      byte[] receivedFileBytes = fileHandler.getByteArrayFromMap(receivedPacketMap);
-      assertEquals(fileBytes.length, receivedFileBytes.length);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  @Test
   public void hasFlagTest() {
     byte[] packet = new byte[1];
     packet = packetAssembler.addPacketHeader(packet, 0, packetAssembler.setFlags(Set.of(ACK)), 9);
@@ -85,5 +66,6 @@ public class PacketTest {
   public void regexTest() {
     String[] splitFileName = "thisisafile213(2).pdf".split("[.]|(\\([0-9]+\\))");
     System.out.println(Arrays.toString(splitFileName));
+    System.out.println(String.format("|%100s|", " "));
   }
 }

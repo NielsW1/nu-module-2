@@ -1,11 +1,13 @@
 package com.nedap.university.service;
 
+import com.nedap.university.service.exceptions.FileException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 
 public class FileStorageFileHandler {
-  public static final String FILE_ERROR = "File does not exist or is not in this directory";
   private final String fileStoragePath;
 
   public FileStorageFileHandler(String fileStoragePath) {
@@ -23,16 +24,6 @@ public class FileStorageFileHandler {
   public byte[] getFileNameBytes(String filePath) {
     String[] splitPath = filePath.split("/+");
     return splitPath[splitPath.length - 1].getBytes();
-  }
-
-  public byte[] getFileBytes(String filePath) throws IOException {
-    File file = new File(filePath);
-    byte[] fileBytes = new byte[(int) file.length()];
-
-    FileInputStream inputStream = new FileInputStream(file);
-    inputStream.read(fileBytes);
-
-    return fileBytes;
   }
 
   public String writeBytesToFile(byte[] fileBytes, String fileName) throws IOException {
@@ -58,12 +49,14 @@ public class FileStorageFileHandler {
     return combinedArray.toByteArray();
   }
 
-  public boolean fileExists(String fileName) {
-    return Files.exists(Paths.get(fileStoragePath + "/" + fileName));
+  public void fileExists(String fileName) throws FileException {
+    if (Files.notExists(Paths.get(fileStoragePath + "/" + fileName))) {
+      throw new FileException();
+    }
   }
 
-  public String getFileStoragePath() {
-    return fileStoragePath;
+  public String getFileStoragePath(String fileName) {
+    return fileStoragePath + "/" + fileName;
   }
 
 }

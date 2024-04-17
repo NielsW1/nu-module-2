@@ -9,8 +9,8 @@ public class FileStoragePacketDecoder {
   int HEADER_SIZE;
 
   public FileStoragePacketDecoder() {
-    this.PAYLOAD_SIZE = FileStorageServiceHandler.PAYLOAD_SIZE;
-    this.HEADER_SIZE = FileStorageServiceHandler.HEADER_SIZE;
+    PAYLOAD_SIZE = FileStorageServiceHandler.PAYLOAD_SIZE;
+    HEADER_SIZE = FileStorageServiceHandler.HEADER_SIZE;
   }
 
   public byte[] getPayload(DatagramPacket packet) {

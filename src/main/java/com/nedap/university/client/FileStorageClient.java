@@ -1,5 +1,6 @@
 package com.nedap.university.client;
 
+import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -62,7 +63,7 @@ public class FileStorageClient {
                 System.out.println("Invalid input: " + command);
                 continue;
             }
-          } catch (IOException e) {
+          } catch (IOException | FileException e) {
             System.out.println(e.getMessage() + "\n");
             continue;
           }
