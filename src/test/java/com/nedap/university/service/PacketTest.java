@@ -6,6 +6,7 @@ import com.nedap.university.packet.FileStoragePacketDecoder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Queue;
@@ -78,5 +79,11 @@ public class PacketTest {
     packet = packetAssembler.addPacketHeader(packet, 0, packetAssembler.setFlags(Set.of(ACK)), 9);
     DatagramPacket dataPacket = new DatagramPacket(packet, packet.length, address, PORT);
     assertTrue(packetReader.hasFlag(dataPacket, ACK));
+  }
+
+  @Test
+  public void regexTest() {
+    String[] splitFileName = "thisisafile213(2).pdf".split("[.]|(\\([0-9]+\\))");
+    System.out.println(Arrays.toString(splitFileName));
   }
 }

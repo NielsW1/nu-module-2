@@ -39,8 +39,8 @@ public class FileStorageFileHandler {
     int fileNum = 1;
 
     while (Files.exists(Paths.get(fileStoragePath + "/" + fileName))) {
-      String[] splitFileName = fileName.split("[.]");
-      fileName = splitFileName[0] + "(" + fileNum++ + ")." + splitFileName[1];
+      String[] splitFileName = fileName.split("[.]|(\\([0-9]+\\))");
+      fileName = splitFileName[0] + "(" + fileNum++ + ")." + splitFileName[splitFileName.length - 1];
     }
     FileOutputStream outputStream = new FileOutputStream(fileStoragePath + "/" + fileName);
     outputStream.write(fileBytes);
