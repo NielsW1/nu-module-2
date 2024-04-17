@@ -21,7 +21,7 @@ import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
 public class FileStorageServiceHandler {
   public static final int PI_PORT = 8080;
   public static final String PI_HOSTNAME = "172.16.1.1";
-  public static final int PAYLOAD_SIZE = 512;
+  public static final int PAYLOAD_SIZE = 16384;
   public static final int HEADER_SIZE = 8;
 
   private final InetAddress piAddress;
@@ -84,14 +84,14 @@ public class FileStorageServiceHandler {
           finalPacket = true;
         }
         receivedPacketMap.put(sequenceNumber, payload);
-        sendPacket(socket, packetAssembler.createAcknowledgementPacket(address, port, sequenceNumber));
+        socket.send(packetAssembler.createAcknowledgementPacket(address, port, sequenceNumber));
       }
     }
     return fileHandler.writeBytesToFile(fileHandler.getByteArrayFromMap(receivedPacketMap), fileName);
   }
 
   public DatagramPacket awaitPacket(DatagramSocket socket, DatagramPacket packet) throws IOException {
-    socket.setSoTimeout(10);
+    socket.setSoTimeout(100);
     while (true) {
       DatagramPacket receivedPacket = packetAssembler.createBufferPacket();
       try {
@@ -104,10 +104,6 @@ public class FileStorageServiceHandler {
     }
   }
 
-  public void sendPacket(DatagramSocket socket, DatagramPacket packet) throws IOException {
-    socket.send(packet);
-  }
-
   public boolean clientHandshake(DatagramSocket socket, String filePath,
       Set<FileStorageHeaderFlags> flagSet) throws IOException {
     int flags = packetAssembler.setFlags(flagSet);
@@ -116,7 +112,8 @@ public class FileStorageServiceHandler {
     DatagramPacket packet = packetAssembler.createDataPacket(requestPacket, piAddress, PI_PORT);
     socket.send(packet);
 
-    DatagramPacket receivedPacket = awaitPacket(socket, packet);
+    DatagramPacket receivedPacket = packetAssembler.createBufferPacket();
+    socket.receive(receivedPacket);
     if (packetDecoder.hasFlag(receivedPacket, ERROR)) {
       throw new IOException(new String(packetDecoder.getPayload(receivedPacket)));
     }
@@ -136,7 +133,7 @@ public class FileStorageServiceHandler {
     if (packetDecoder.hasFlag(requestPacket, MODE)) {
       System.out.println("Request from: " + address.toString() + " to retrieve file: " + fileName);
       if (fileHandler.fileExists(fileName)) {
-        sendPacket(socket, packetAssembler.createAcknowledgementPacket(address, port, 0));
+        socket.send(packetAssembler.createAcknowledgementPacket(address, port, 0));
         sendFile(socket, address, port, fileHandler.getFileStoragePath() + "/" + fileName);
         System.out.println("File sent successfully");
       } else {
@@ -146,7 +143,7 @@ public class FileStorageServiceHandler {
       }
     } else {
       System.out.println("Request from: " + address.toString() + " to send file: " + fileName);
-      sendPacket(socket, packetAssembler.createAcknowledgementPacket(address, port, 0));
+      socket.send(packetAssembler.createAcknowledgementPacket(address, port, 0));
       String outputFile = receiveFile(socket, address, port, fileName);
       System.out.println("File received and stored in: " + fileHandler.getFileStoragePath() + "/" + outputFile);
     }
