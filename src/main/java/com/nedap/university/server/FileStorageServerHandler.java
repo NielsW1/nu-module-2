@@ -4,6 +4,8 @@ package com.nedap.university.server;
 import com.nedap.university.service.FileStorageServiceHandler;
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class FileStorageServerHandler {
   private FileStorageServiceHandler serviceHandler;
@@ -14,11 +16,7 @@ public class FileStorageServerHandler {
     socket = new DatagramSocket(FileStorageServiceHandler.PI_PORT);
   }
 
-  public void sendFile() {
-
-  }
-
-  public void receiveFile() {
-
+  public void runServer() throws IOException {
+    serviceHandler.serverHandshake(socket);
   }
 }

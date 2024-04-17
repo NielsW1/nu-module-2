@@ -22,17 +22,16 @@ public class Main {
       System.out.println("I/O error: " + e.getMessage());
     }
     running = true;
-    System.out.println("Hello, Nedap University!");
+    System.out.println("Running service...");
 
-   initShutdownHook();
+    initShutdownHook();
 
     while (keepAlive) {
       try {
-        System.out.println("Running service...");
         server.runServer();
-//        Thread.sleep(1000);
-//      } catch (InterruptedException) {
-//        Thread.currentThread().interrupt();
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
       } catch (IOException e) {
         System.out.println("I/O error: " + e.getMessage());
       } catch (NullPointerException e) {
