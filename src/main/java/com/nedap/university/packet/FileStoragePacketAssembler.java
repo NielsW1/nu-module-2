@@ -1,18 +1,14 @@
 package com.nedap.university.packet;
 
-import com.nedap.university.service.FileStorageServiceHandler;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Set;
-
+import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
 import static com.nedap.university.packet.FileStorageHeaderFlags.ERROR;
 import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
-import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
-import static com.nedap.university.packet.FileStorageHeaderFlags.MODE;
+import static com.nedap.university.packet.FileStorageHeaderFlags.RETRIEVE;
+import static com.nedap.university.packet.FileStorageHeaderFlags.SEND;
+
+import com.nedap.university.service.FileStorageServiceHandler;
+import java.net.DatagramPacket;
+import java.util.Set;
 
 public class FileStoragePacketAssembler {
   int PAYLOAD_SIZE;
@@ -28,13 +24,20 @@ public class FileStoragePacketAssembler {
 
   public DatagramPacket createPacket(byte[] payload, int sequenceNumber, int flags) {
     byte[] packet = addPacketHeader(payload, sequenceNumber, flags, payload.length);
-    return new DatagramPacket(packet, packet.length, serviceHandler.getAddress(), serviceHandler.getPort());
+    return new DatagramPacket(packet, packet.length, serviceHandler.getAddress(),
+        serviceHandler.getPort());
   }
 
   public DatagramPacket createAckPacket(int sequenceNumber) {
-    byte[] acknowledgementPacket = addPacketHeader(new byte[1], sequenceNumber, setFlags(ACK), 1);
-    return new DatagramPacket(acknowledgementPacket, acknowledgementPacket.length, serviceHandler.getAddress(),
-        serviceHandler.getPort());
+    return createPacket(new byte[1], sequenceNumber, setFlags(ACK));
+  }
+
+  public DatagramPacket createSendFilePacket(long fileSize, byte[] fileName, int flags) {
+    byte[] fileSizeArray = getFileSizeByteArray(fileSize);
+    byte[] packetWithFileSize = new byte[fileName.length + 8];
+    System.arraycopy(fileSizeArray, 0, packetWithFileSize, 0, fileSizeArray.length);
+    System.arraycopy(fileName, 0, packetWithFileSize, 8, fileName.length);
+    return createPacket(packetWithFileSize, 0, flags);
   }
 
   public DatagramPacket createBufferPacket(int bufferSize) {
@@ -64,18 +67,30 @@ public class FileStoragePacketAssembler {
 
     for (FileStorageHeaderFlags flag : flags) {
       if (flag == ERROR) {
-        flagByte |= 1 << 3;
+        flagByte |= 1 << 4;
       }
       if (flag == FINAL) {
-        flagByte |= 1 << 2;
+        flagByte |= 1 << 3;
       }
       if (flag == ACK) {
+        flagByte |= 1 << 2;
+      }
+      if (flag == RETRIEVE) {
         flagByte |= 1 << 1;
       }
-      if (flag == MODE) {
+      if (flag == SEND) {
         flagByte |= 1;
       }
     }
     return flagByte;
   }
+
+  public byte[] getFileSizeByteArray(long fileSize) {
+    byte[] fileSizeArray = new byte[8];
+    for (int i = 1; i < 9; i++) {
+      fileSizeArray[i - 1] = (byte) (((fileSize) >>> ((8 - i) * 8)) & 0xff);
+    }
+    return fileSizeArray;
+  }
+
 }

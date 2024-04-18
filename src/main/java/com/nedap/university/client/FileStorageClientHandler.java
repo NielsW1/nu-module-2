@@ -15,7 +15,8 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.nedap.university.packet.FileStorageHeaderFlags.MODE;
+import static com.nedap.university.packet.FileStorageHeaderFlags.RETRIEVE;
+import static com.nedap.university.packet.FileStorageHeaderFlags.SEND;
 
 public class FileStorageClientHandler {
   private final FileStorageServiceHandler serviceHandler;
@@ -27,23 +28,21 @@ public class FileStorageClientHandler {
     socket = new DatagramSocket();
   }
 
-  public void sendFile(String pathToFile) throws IOException, FileException{
+  public void sendFile(String pathToFile) throws IOException, FileException {
     Path filePath = Paths.get(pathToFile);
     if (Files.notExists(filePath)) {
       throw new FileException();
     }
-    if (serviceHandler.clientHandshake(socket, pathToFile, null)) {
-      System.out.println("Handshake successful, Sending file...");
-      serviceHandler.sendFile(socket, filePath);
-      System.out.println("File sent successfully");
-    }
+    long fileSize = serviceHandler.clientHandshake(socket, pathToFile, SEND);
+    System.out.println("Handshake successful, Sending file...");
+    serviceHandler.sendFile(socket, filePath, fileSize);
+    System.out.println("File sent successfully");
   }
 
   public void retrieveFile(String fileName) throws IOException {
-    if (serviceHandler.clientHandshake(socket, fileName, MODE)) {
-      System.out.println("Handshake successful, retrieving file...");
-      String outputFileName = serviceHandler.receiveFile(socket, fileName);
-      System.out.println("File downloaded to " + System.getProperty("user.home") + "/Downloads/" + outputFileName);
-    }
+    long fileSize = serviceHandler.clientHandshake(socket, fileName, RETRIEVE);
+    System.out.println("Handshake successful, retrieving file...");
+    String outputPath = serviceHandler.receiveFile(socket, fileName, fileSize);
+    System.out.println("File downloaded to " + outputPath);
   }
 }

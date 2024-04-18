@@ -15,7 +15,11 @@ public class FileStorageServer {
   private DatagramSocket socket;
 
   public FileStorageServer() throws IOException {
-    serviceHandler = new FileStorageServiceHandler("/home/pi/FileStorage");
+    this("/home/pi/FileStorage");
+  }
+
+  public FileStorageServer(String fileStoragePath) throws IOException{
+    serviceHandler = new FileStorageServiceHandler(fileStoragePath);
     socket = new DatagramSocket(PI_PORT);
   }
 

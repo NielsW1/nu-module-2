@@ -6,25 +6,29 @@ import com.nedap.university.packet.FileStoragePacketDecoder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashSet;
-import java.util.Queue;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static com.nedap.university.packet.FileStorageHeaderFlags.ERROR;
+import static com.nedap.university.packet.FileStorageHeaderFlags.RETRIEVE;
+import static com.nedap.university.packet.FileStorageHeaderFlags.SEND;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
 import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
-import static com.nedap.university.packet.FileStorageHeaderFlags.MODE;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PacketTest {
-  private FileStoragePacketAssembler packetAssembler;
-  private FileStoragePacketDecoder packetReader;
+  private FileStoragePacketAssembler assembler;
+  private FileStoragePacketDecoder decoder;
   private FileStorageServiceHandler serviceHandler;
   private FileStorageFileHandler fileHandler;
   public static final int PORT = 8080;
@@ -35,9 +39,10 @@ public class PacketTest {
   public void setup() {
     try {
       address = InetAddress.getByName(HOSTNAME);
-      packetReader = new FileStoragePacketDecoder();
-      serviceHandler = new FileStorageServiceHandler("bla");
-      packetAssembler = new FileStoragePacketAssembler(serviceHandler);
+      decoder = new FileStoragePacketDecoder();
+      serviceHandler = new FileStorageServiceHandler("./example_files");
+      serviceHandler.setAddressAndPort(address, PORT);
+      assembler = new FileStoragePacketAssembler(serviceHandler);
       fileHandler = new FileStorageFileHandler("./example_files");
     } catch (IOException e) {
       e.printStackTrace();
@@ -45,27 +50,46 @@ public class PacketTest {
   }
 
   @Test
+  public void assemblerDecoderTest() {
+    byte[] payload = "Ash nazg durbatuluk, ash nazg gimbatul, ash nazg thrakatuluk, agh burzum ishi krimpatul".getBytes();
+    DatagramPacket packet = assembler.createPacket(payload, 1337, assembler.setFlags(Set.of(FINAL, ACK)));
+    assertArrayEquals(payload, decoder.getPayload(packet));
+    assertEquals(payload.length, decoder.getPayloadSize(packet));
+    assertEquals(1337, decoder.getSequenceNumber(packet));
+    assertTrue(decoder.hasFlag(packet, FINAL));
+    assertTrue(decoder.hasFlag(packet, ACK));
+    assertFalse(decoder.hasFlag(packet, SEND));
+    assertFalse(decoder.hasFlag(packet, RETRIEVE));
+    assertFalse(decoder.hasFlag(packet, ERROR));
+  }
+
+  @Test
+  public void ackPacketTest() {
+    DatagramPacket packet = assembler.createAckPacket(1337);
+    assertEquals(1337, decoder.getSequenceNumber(packet));
+    assertTrue(decoder.hasFlag(packet, ACK));
+    assertArrayEquals(new byte[1], decoder.getPayload(packet));
+  }
+
+  @Test
+  public void createSendRequestTest() {
+    try {
+      long fileSize = Files.size(Paths.get("./example_files/large.pdf"));
+      DatagramPacket packet = assembler.createSendFilePacket(fileSize, "large.pdf".getBytes(), assembler.setFlags(SEND));
+      assertEquals("large.pdf", decoder.getFileName(packet));
+      assertEquals(fileSize, decoder.getFileSize(packet));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Test
   public void setFlagsTest() {
-    int flags = packetAssembler.setFlags(Set.of(FINAL, ACK, MODE));
-    assertEquals(7, flags);
-    flags = packetAssembler.setFlags(Set.of(FINAL, MODE));
-    assertEquals(5, flags);
-    flags = packetAssembler.setFlags(new HashSet<>());
+    int flags = assembler.setFlags(Set.of(FINAL, ACK, SEND));
+    assertEquals(13, flags);
+    flags = assembler.setFlags(Set.of(FINAL, SEND));
+    assertEquals(9, flags);
+    flags = assembler.setFlags(new HashSet<>());
     assertEquals(0, flags);
-  }
-
-  @Test
-  public void hasFlagTest() {
-    byte[] packet = new byte[1];
-    packet = packetAssembler.addPacketHeader(packet, 0, packetAssembler.setFlags(Set.of(ACK)), 9);
-    DatagramPacket dataPacket = new DatagramPacket(packet, packet.length, address, PORT);
-    assertTrue(packetReader.hasFlag(dataPacket, ACK));
-  }
-
-  @Test
-  public void regexTest() {
-    String[] splitFileName = "thisisafile213(2).pdf".split("[.]|(\\([0-9]+\\))");
-    System.out.println(Arrays.toString(splitFileName));
-    System.out.println(String.format("|%100s|", " "));
   }
 }

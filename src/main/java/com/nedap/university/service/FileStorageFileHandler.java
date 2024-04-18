@@ -26,17 +26,13 @@ public class FileStorageFileHandler {
     return splitPath[splitPath.length - 1].getBytes();
   }
 
-  public String writeBytesToFile(byte[] fileBytes, String fileName) throws IOException {
+  public Path updateFileName(String fileName) {
     int fileNum = 1;
-
     while (Files.exists(Paths.get(fileStoragePath + "/" + fileName))) {
       String[] splitFileName = fileName.split("[.]|(\\([0-9]+\\))");
       fileName = splitFileName[0] + "(" + fileNum++ + ")." + splitFileName[splitFileName.length - 1];
     }
-    FileOutputStream outputStream = new FileOutputStream(fileStoragePath + "/" + fileName);
-    outputStream.write(fileBytes);
-
-    return fileName;
+    return Paths.get((fileStoragePath + "/" + fileName));
   }
 
   public byte[] getByteArrayFromMap(HashMap<Integer, byte[]> receivedPacketMap) {
@@ -49,14 +45,16 @@ public class FileStorageFileHandler {
     return combinedArray.toByteArray();
   }
 
-  public void fileExists(String fileName) throws FileException {
-    if (Files.notExists(Paths.get(fileStoragePath + "/" + fileName))) {
-      throw new FileException();
-    }
+  public boolean fileExists(String fileName) {
+    return Files.exists(Paths.get(fileStoragePath + "/" + fileName));
   }
 
-  public String getFileStoragePath(String fileName) {
-    return fileStoragePath + "/" + fileName;
+  public Path getFileStoragePath(String fileName) {
+    return Paths.get(fileStoragePath + "/" + fileName);
+  }
+
+  public long getFileSize(String fileName) throws IOException{
+    return Files.size(getFileStoragePath(fileName));
   }
 
 }

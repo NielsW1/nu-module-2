@@ -8,7 +8,7 @@ package com.nedap.university.packet;
  * MODE: Used by the server to differentiate between send and retrieve mode (0 = send, 1 = retrieve)
  */
 public enum FileStorageHeaderFlags {
-  ERROR, FINAL, ACK, MODE
+  ERROR, FINAL, ACK, RETRIEVE, SEND
 }
 
 

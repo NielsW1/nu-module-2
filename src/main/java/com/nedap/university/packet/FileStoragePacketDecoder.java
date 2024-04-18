@@ -25,6 +25,22 @@ public class FileStoragePacketDecoder {
     return payloadSize;
   }
 
+  public String getFileName(DatagramPacket packet) {
+    byte[] payload = getPayload(packet);
+    return new String(Arrays.copyOfRange(payload, 8, payload.length));
+  }
+
+  public long getFileSize(DatagramPacket packet) {
+    byte[] payload = getPayload(packet);
+    long fileSize = 0;
+
+    for (int i = 1; i < 9; i++) {
+      fileSize |= (long) (payload[i - 1] & 0xff) << ((8 - i) * 8);
+    }
+
+    return fileSize;
+  }
+
   public int getSequenceNumber(DatagramPacket packet) {
     int sequenceNumber = 0;
     sequenceNumber |= (packet.getData()[0] & 0xff) << 24;
@@ -38,10 +54,11 @@ public class FileStoragePacketDecoder {
   public boolean hasFlag(DatagramPacket packet, FileStorageHeaderFlags flag) {
     int flags = packet.getData()[6];
     return switch (flag) {
-      case ERROR -> ((flags >>> 3 & 1) == 1);
-      case FINAL -> ((flags >>> 2 & 1) == 1);
-      case ACK -> ((flags >>> 1 & 1) == 1);
-      case MODE -> ((flags & 1) == 1);
+      case ERROR -> ((flags >>> 4 & 1) == 1);
+      case FINAL -> ((flags >>> 3 & 1) == 1);
+      case ACK -> ((flags >>> 2 & 1) == 1);
+      case RETRIEVE -> ((flags >>> 1 & 1) == 1);
+      case SEND -> ((flags & 1) == 1);
     };
   }
 }
