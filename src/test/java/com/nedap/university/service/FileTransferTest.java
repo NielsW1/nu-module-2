@@ -14,17 +14,16 @@ import org.junit.jupiter.api.Test;
 public class FileTransferTest {
   private FileStorageServer server;
   private FileStorageClientHandler client;
+  private DatagramSocket socket;
   public static final String HOSTNAME = "127.0.0.1";
-  private InetAddress address;
   String file;
 
   @BeforeEach
   public void setup() {
     try {
       file = "./example_files/large.pdf";
-      address = InetAddress.getByName(HOSTNAME);
-      client = new FileStorageClientHandler();
-      server = new FileStorageServer(System.getProperty("user.home") + "/Documents");
+      client = new FileStorageClientHandler(HOSTNAME, 8080);
+      socket = new DatagramSocket(8080);
     } catch (IOException e) {
       e.printStackTrace();
     }

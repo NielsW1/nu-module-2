@@ -1,5 +1,6 @@
 package com.nedap.university.client;
 
+import com.nedap.university.server.FileStorageServer;
 import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
 import java.net.DatagramSocket;
@@ -19,7 +20,7 @@ public class FileStorageClient {
     Scanner input = new Scanner(System.in);
 
     try {
-      clientHandler = new FileStorageClientHandler();
+      clientHandler = new FileStorageClientHandler(FileStorageServer.PI_HOSTNAME, FileStorageServer.PI_PORT);
       System.out.println("Welcome to Niels' Raspberry Pi file storage system!");
 
       while (true) {
@@ -64,7 +65,7 @@ public class FileStorageClient {
                 continue;
             }
           } catch (IOException | FileException e) {
-            System.out.println(e.getMessage() + "\n");
+            System.out.println("I/O error: " + e.getMessage() + "\n");
             continue;
           }
           System.out.println("Would you like to send/retrieve another file? (y/n)");

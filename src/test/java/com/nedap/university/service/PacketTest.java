@@ -75,7 +75,7 @@ public class PacketTest {
   public void createSendRequestTest() {
     try {
       long fileSize = Files.size(Paths.get("./example_files/large.pdf"));
-      DatagramPacket packet = assembler.createSendFilePacket(fileSize, "large.pdf".getBytes(), assembler.setFlags(SEND));
+      DatagramPacket packet = assembler.createRequestPacket(fileSize, "large.pdf".getBytes(), assembler.setFlags(SEND));
       assertEquals("large.pdf", decoder.getFileName(packet));
       assertEquals(fileSize, decoder.getFileSize(packet));
     } catch (IOException e) {

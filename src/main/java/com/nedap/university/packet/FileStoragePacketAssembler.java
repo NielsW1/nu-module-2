@@ -3,6 +3,7 @@ package com.nedap.university.packet;
 import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
 import static com.nedap.university.packet.FileStorageHeaderFlags.ERROR;
 import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
+import static com.nedap.university.packet.FileStorageHeaderFlags.NACK;
 import static com.nedap.university.packet.FileStorageHeaderFlags.RETRIEVE;
 import static com.nedap.university.packet.FileStorageHeaderFlags.SEND;
 
@@ -32,14 +33,13 @@ public class FileStoragePacketAssembler {
     return createPacket(new byte[1], sequenceNumber, setFlags(ACK));
   }
 
-  public DatagramPacket createSendFilePacket(long fileSize, byte[] fileName, int flags) {
+  public DatagramPacket createRequestPacket(long fileSize, byte[] fileName, int flags) {
     byte[] fileSizeArray = getFileSizeByteArray(fileSize);
     byte[] packetWithFileSize = new byte[fileName.length + 8];
     System.arraycopy(fileSizeArray, 0, packetWithFileSize, 0, fileSizeArray.length);
     System.arraycopy(fileName, 0, packetWithFileSize, 8, fileName.length);
     return createPacket(packetWithFileSize, 0, flags);
   }
-
   public DatagramPacket createBufferPacket(int bufferSize) {
     return new DatagramPacket(new byte[bufferSize], bufferSize);
   }
@@ -67,9 +67,12 @@ public class FileStoragePacketAssembler {
 
     for (FileStorageHeaderFlags flag : flags) {
       if (flag == ERROR) {
-        flagByte |= 1 << 4;
+        flagByte |= 1 << 5;
       }
       if (flag == FINAL) {
+        flagByte |= 1 << 4;
+      }
+      if (flag == NACK) {
         flagByte |= 1 << 3;
       }
       if (flag == ACK) {

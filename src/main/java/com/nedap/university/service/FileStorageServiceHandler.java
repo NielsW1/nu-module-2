@@ -3,23 +3,17 @@ package com.nedap.university.service;
 import com.nedap.university.packet.FileStorageHeaderFlags;
 import com.nedap.university.packet.FileStoragePacketAssembler;
 import com.nedap.university.packet.FileStoragePacketDecoder;
-import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketTimeoutException;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Set;
 
 import static com.nedap.university.packet.FileStorageHeaderFlags.ERROR;
 import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
-import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
 import static com.nedap.university.packet.FileStorageHeaderFlags.RETRIEVE;
 import static com.nedap.university.packet.FileStorageHeaderFlags.SEND;
 
@@ -46,7 +40,7 @@ public class FileStorageServiceHandler {
   }
 
   public void sendFile(DatagramSocket socket, Path filePath, long fileSize) throws IOException {
-    sender.sendFile(socket, filePath, PAYLOAD_SIZE, WINDOW_SIZE, fileSize);
+    sender.sendFile(socket, filePath, fileSize);
   }
 
   public String receiveFile(DatagramSocket socket, String fileName, long fileSize) throws IOException {
@@ -59,26 +53,29 @@ public class FileStorageServiceHandler {
       FileStorageHeaderFlags flag) throws IOException {
     byte[] fileNameBytes = fileHandler.getFileNameBytes(filePath);
     DatagramPacket packet;
+    long fileSize = 0;
 
     if (flag == SEND) {
-      packet = assembler.createSendFilePacket(Files.size(Paths.get(filePath)), fileNameBytes, assembler.setFlags(flag));
+      packet = assembler.createRequestPacket(Files.size(Paths.get(filePath)), fileNameBytes, assembler.setFlags(flag));
     } else {
-      packet = assembler.createPacket(fileNameBytes, 0, assembler.setFlags(flag));
+      packet = assembler.createRequestPacket(0, fileNameBytes, assembler.setFlags(flag));
     }
     socket.send(packet);
 
-    socket.setSoTimeout(5000);
-    DatagramPacket receivedPacket = assembler.createBufferPacket(PACKET_SIZE);
-    socket.receive(receivedPacket);
+    while (true) {
+      DatagramPacket receivedPacket = assembler.createBufferPacket(PACKET_SIZE);
+      socket.receive(receivedPacket);
 
-    if (decoder.hasFlag(receivedPacket, ERROR)) {
-      throw new IOException(new String(decoder.getPayload(receivedPacket)));
+      if (decoder.hasFlag(receivedPacket, ERROR)) {
+        throw new IOException(new String(decoder.getPayload(receivedPacket)));
+      }
+      if (decoder.hasFlag(receivedPacket, ACK) && (decoder.hasFlag(receivedPacket, SEND)
+          || decoder.hasFlag(receivedPacket, RETRIEVE))) {
+        fileSize = decoder.getFileSize(receivedPacket);
+        break;
+      }
     }
-    if (!decoder.hasFlag(receivedPacket, ACK)) {
-      throw new IOException("No acknowledgement received from server");
-    }
-
-    return decoder.getFileSize(receivedPacket);
+    return fileSize;
   }
 
   public void serverHandshake(DatagramSocket socket) throws IOException {
@@ -106,7 +103,8 @@ public class FileStorageServiceHandler {
       socket.send(assembler.createPacket(error.getBytes(), 0, assembler.setFlags(ERROR)));
       System.out.println("Error: " + error);
     } else {
-      socket.send(assembler.createAckPacket(0));
+      socket.send(assembler.createPacket(assembler.getFileSizeByteArray(fileSize), 0,
+          assembler.setFlags(Set.of(ACK, SEND))));
       String outputPath = receiveFile(socket, fileName, fileSize);
       System.out.println(
           "File received and stored at: " + outputPath);
@@ -123,8 +121,8 @@ public class FileStorageServiceHandler {
       System.out.println("Error: " + error);
     } else {
       long fileSize = fileHandler.getFileSize(fileName);
-      socket.send(assembler.createSendFilePacket(fileSize, fileName.getBytes(),
-          assembler.setFlags(ACK)));
+      socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),
+          assembler.setFlags(Set.of(ACK, RETRIEVE))));
       sendFile(socket, fileHandler.getFileStoragePath(fileName), fileSize);
       System.out.println("File sent successfully");
     }

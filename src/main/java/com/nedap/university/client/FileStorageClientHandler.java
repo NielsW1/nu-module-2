@@ -22,9 +22,9 @@ public class FileStorageClientHandler {
   private final FileStorageServiceHandler serviceHandler;
   private final DatagramSocket socket;
 
-  public FileStorageClientHandler() throws IOException {
+  public FileStorageClientHandler(String address, int port) throws IOException {
     serviceHandler = new FileStorageServiceHandler(System.getProperty("user.home") + "/Downloads");
-    serviceHandler.setAddressAndPort(InetAddress.getByName(FileStorageServer.PI_HOSTNAME), FileStorageServer.PI_PORT);
+    serviceHandler.setAddressAndPort(InetAddress.getByName(address), port);
     socket = new DatagramSocket();
   }
 
