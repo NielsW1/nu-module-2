@@ -1,6 +1,8 @@
 package com.nedap.university.service;
 
+import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
 import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
+import static com.nedap.university.packet.FileStorageHeaderFlags.NACK;
 import static com.nedap.university.service.FileStorageServiceHandler.PAYLOAD_SIZE;
 import static com.nedap.university.service.FileStorageServiceHandler.HEADER_SIZE;
 import static com.nedap.university.service.FileStorageServiceHandler.PACKET_SIZE;
@@ -45,34 +47,35 @@ public class FileStorageReceiver {
 
     while (!finalPacket) {
       int LAF = LFR + WINDOW_SIZE;
+      int NEF = LFR + 1;
       DatagramPacket packet = assembler.createBufferPacket(PACKET_SIZE);
       socket.receive(packet);
 
       int sequenceNumber = decoder.getSequenceNumber(packet);
-      if (sequenceNumber > LFR && sequenceNumber <= LAF) {
+      if (sequenceNumber == NEF) {
         receiveWindow.put(sequenceNumber, packet);
-        for (int i = LFR + 1; i <= LAF; i++) {
+        for (int i = NEF; i <= LAF; i++) {
           if (receiveWindow.containsKey(i)) {
-            ByteBuffer packetBuffer = ByteBuffer.wrap(decoder.getPayload(packet));
-            byteChannel.position((long) sequenceNumber * PAYLOAD_SIZE);
+            ByteBuffer packetBuffer = ByteBuffer.wrap(decoder.getPayload(receiveWindow.get(i)));
+            byteChannel.position((long) i * PAYLOAD_SIZE);
             byteChannel.write(packetBuffer);
-            if (decoder.hasFlag(receiveWindow.get(i), FINAL)) {
-              finalPacket = true;
-              byteChannel.close();
-              socket.send(assembler.createAckPacket(i));
-            }
             receiveWindow.remove(i);
             LFR = i;
-            progress = FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets,
-                progress);
+            progress = FileStorageProgressBar.updateProgressBar(i, numOfPackets, progress);
+            if (decoder.hasFlag(packet, FINAL)) {
+              finalPacket = true;
+            }
           } else {
-            socket.send(assembler.createAckPacket(LFR));
-            System.out.println("Sending ack: " + LFR);
             break;
           }
         }
+        socket.send(assembler.createAckPacket(LFR, ACK));
+      } else if (sequenceNumber > NEF){
+        receiveWindow.put(sequenceNumber, packet);
+        socket.send(assembler.createAckPacket(NEF, NACK));
       }
     }
+    byteChannel.close();
     FileStorageProgressBar.finalizeProgressBar();
   }
 }

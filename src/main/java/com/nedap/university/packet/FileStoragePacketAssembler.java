@@ -29,8 +29,8 @@ public class FileStoragePacketAssembler {
         serviceHandler.getPort());
   }
 
-  public DatagramPacket createAckPacket(int sequenceNumber) {
-    return createPacket(new byte[1], sequenceNumber, setFlags(ACK));
+  public DatagramPacket createAckPacket(int sequenceNumber, FileStorageHeaderFlags flag) {
+    return createPacket(new byte[1], sequenceNumber, setFlags(flag));
   }
 
   public DatagramPacket createRequestPacket(long fileSize, byte[] fileName, int flags) {
