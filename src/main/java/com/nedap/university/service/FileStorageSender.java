@@ -39,6 +39,8 @@ public class FileStorageSender {
     int LAR = 0;
     int progress = 0;
     int numOfPackets = (int) (fileSize / PAYLOAD_SIZE);
+    boolean finalAck = false;
+    boolean finalPacketSent = false;
     SeekableByteChannel byteChannel = Files.newByteChannel(filePath, StandardOpenOption.READ);
     ByteBuffer packetBuffer = ByteBuffer.allocate(PAYLOAD_SIZE);
     HashMap<Integer, DatagramPacket> sendWindow = new HashMap<>();
@@ -46,7 +48,28 @@ public class FileStorageSender {
     FileStorageProgressBar.initProgressBar(fileSize);
 
     while ((bytesRead = byteChannel.read(packetBuffer)) != -1) {
-      while (sendWindow.size() >= WINDOW_SIZE) {
+      byte[] payload;
+      DatagramPacket packet;
+      packetBuffer.flip();
+
+      if (bytesRead < PAYLOAD_SIZE) {
+        payload = new byte[PAYLOAD_SIZE - packetBuffer.remaining()];
+        System.arraycopy(packetBuffer.array(), 0, payload, 0, payload.length);
+        packet = assembler.createPacket(payload, sequenceNumber,
+            assembler.setFlags(FINAL));
+        finalPacketSent = true;
+      } else {
+        packet = assembler.createPacket(packetBuffer.array(), sequenceNumber, 0);
+      }
+      socket.send(packet);
+      sendWindow.put(sequenceNumber, packet);
+      sequenceNumber++;
+      packetBuffer.clear();
+
+      progress = FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets,
+          progress);
+
+      while (sendWindow.size() >= WINDOW_SIZE || (finalPacketSent && !sendWindow.isEmpty())) {
         DatagramPacket ackPacket = assembler.createBufferPacket(HEADER_SIZE);
         socket.receive(ackPacket);
         int ackNumber = decoder.getSequenceNumber(ackPacket);
@@ -60,42 +83,6 @@ public class FileStorageSender {
             } else {
               break;
             }
-          }
-        }
-      }
-
-      byte[] payload;
-      DatagramPacket packet;
-      packetBuffer.flip();
-      if (bytesRead < PAYLOAD_SIZE) {
-        payload = new byte[PAYLOAD_SIZE - packetBuffer.remaining()];
-        System.arraycopy(packetBuffer.array(), 0, payload, 0, payload.length);
-        packet = assembler.createPacket(payload, sequenceNumber,
-            assembler.setFlags(FINAL));
-      } else {
-        packet = assembler.createPacket(packetBuffer.array(), sequenceNumber, 0);
-      }
-      socket.send(packet);
-      sendWindow.put(sequenceNumber, packet);
-      sequenceNumber++;
-      packetBuffer.clear();
-
-      progress = FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets,
-          progress);
-    }
-    while (!sendWindow.isEmpty()) {
-      DatagramPacket ackPacket = assembler.createBufferPacket(HEADER_SIZE);
-      socket.receive(ackPacket);
-      int ackNumber = decoder.getSequenceNumber(ackPacket);
-      if (decoder.hasFlag(ackPacket, NACK)) {
-        socket.send(sendWindow.get(ackNumber));
-      } else {
-        for (int i = LAR + 1; i <= ackNumber; i++) {
-          if (sendWindow.containsKey(i)) {
-            sendWindow.remove(i);
-            LAR = ackNumber;
-          } else {
-            break;
           }
         }
       }

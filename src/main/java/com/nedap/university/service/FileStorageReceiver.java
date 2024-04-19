@@ -65,6 +65,7 @@ public class FileStorageReceiver {
             if (decoder.hasFlag(packet, FINAL)) {
               finalPacket = true;
             }
+
           } else {
             break;
           }
