@@ -72,7 +72,6 @@ public class FileStorageSender {
         System.arraycopy(packetBuffer.array(), 0, payload, 0, payload.length);
         packet = assembler.createPacket(payload, sequenceNumber,
             assembler.setFlags(FINAL));
-        System.out.println("Final packet: " + sequenceNumber);
       } else {
         packet = assembler.createPacket(packetBuffer.array(), sequenceNumber, 0);
       }
