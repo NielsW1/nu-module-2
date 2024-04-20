@@ -1,8 +1,5 @@
 package com.nedap.university.client;
 
-import com.nedap.university.packet.FileStorageHeaderFlags;
-import com.nedap.university.server.FileStorageServer;
-import com.nedap.university.service.FileStorageFileHandler;
 import com.nedap.university.service.FileStorageServiceHandler;
 import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
@@ -11,12 +8,9 @@ import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
 
-import static com.nedap.university.packet.FileStorageHeaderFlags.RETRIEVE;
-import static com.nedap.university.packet.FileStorageHeaderFlags.SEND;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
 
 public class FileStorageClientHandler {
   private final FileStorageServiceHandler serviceHandler;

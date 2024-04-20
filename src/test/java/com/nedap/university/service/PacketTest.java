@@ -1,8 +1,8 @@
 package com.nedap.university.service;
 
 
-import com.nedap.university.packet.FileStoragePacketAssembler;
-import com.nedap.university.packet.FileStoragePacketDecoder;
+import com.nedap.university.protocol.FileStoragePacketAssembler;
+import com.nedap.university.protocol.FileStoragePacketDecoder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -13,17 +13,17 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.nedap.university.packet.FileStorageHeaderFlags.ERROR;
-import static com.nedap.university.packet.FileStorageHeaderFlags.RETRIEVE;
-import static com.nedap.university.packet.FileStorageHeaderFlags.SEND;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ERROR;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
-import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.FINAL;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ACK;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PacketTest {
@@ -61,11 +61,12 @@ public class PacketTest {
     assertFalse(decoder.hasFlag(packet, SEND));
     assertFalse(decoder.hasFlag(packet, RETRIEVE));
     assertFalse(decoder.hasFlag(packet, ERROR));
+    assertTrue(decoder.verifyChecksum(packet));
   }
 
   @Test
   public void ackPacketTest() {
-    DatagramPacket packet = assembler.createAckPacket(1337);
+    DatagramPacket packet = assembler.createAckPacket(1337, ACK);
     assertEquals(1337, decoder.getSequenceNumber(packet));
     assertTrue(decoder.hasFlag(packet, ACK));
     assertArrayEquals(new byte[1], decoder.getPayload(packet));
@@ -86,9 +87,9 @@ public class PacketTest {
   @Test
   public void setFlagsTest() {
     int flags = assembler.setFlags(Set.of(FINAL, ACK, SEND));
-    assertEquals(13, flags);
+    assertEquals(21, flags);
     flags = assembler.setFlags(Set.of(FINAL, SEND));
-    assertEquals(9, flags);
+    assertEquals(17, flags);
     flags = assembler.setFlags(new HashSet<>());
     assertEquals(0, flags);
   }

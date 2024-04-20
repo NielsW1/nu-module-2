@@ -2,6 +2,7 @@ package com.nedap.university.server;
 
 import com.nedap.university.client.FileStorageClientHandler;
 import com.nedap.university.service.FileStorageServiceHandler;
+import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -23,7 +24,7 @@ public class FileStorageServer {
     socket = new DatagramSocket(PI_PORT);
   }
 
-  public void runServer() throws IOException {
+  public void runServer() throws IOException, FileException {
     serviceHandler.serverHandshake(socket);
   }
 }

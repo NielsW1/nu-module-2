@@ -1,25 +1,23 @@
-package com.nedap.university.packet;
+package com.nedap.university.protocol;
 
-import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
-import static com.nedap.university.packet.FileStorageHeaderFlags.ERROR;
-import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
-import static com.nedap.university.packet.FileStorageHeaderFlags.NACK;
-import static com.nedap.university.packet.FileStorageHeaderFlags.RETRIEVE;
-import static com.nedap.university.packet.FileStorageHeaderFlags.SEND;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ACK;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ERROR;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.FINAL;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.NACK;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
+import static com.nedap.university.service.FileStorageServiceHandler.HEADER_SIZE;
 
 import com.nedap.university.service.FileStorageServiceHandler;
 import java.net.DatagramPacket;
 import java.util.Set;
+import java.util.zip.CRC32;
 
 public class FileStoragePacketAssembler {
-  int PAYLOAD_SIZE;
-  int HEADER_SIZE;
 
-  private FileStorageServiceHandler serviceHandler;
+  private final FileStorageServiceHandler serviceHandler;
 
   public FileStoragePacketAssembler(FileStorageServiceHandler serviceHandler) {
-    PAYLOAD_SIZE = FileStorageServiceHandler.PAYLOAD_SIZE;
-    HEADER_SIZE = FileStorageServiceHandler.HEADER_SIZE;
     this.serviceHandler = serviceHandler;
   }
 
@@ -40,6 +38,7 @@ public class FileStoragePacketAssembler {
     System.arraycopy(fileName, 0, packetWithFileSize, 8, fileName.length);
     return createPacket(packetWithFileSize, 0, flags);
   }
+
   public DatagramPacket createBufferPacket(int bufferSize) {
     return new DatagramPacket(new byte[bufferSize], bufferSize);
   }
@@ -55,7 +54,21 @@ public class FileStoragePacketAssembler {
     packetWithHeader[5] = (byte) (payloadSize & 0xff);
     packetWithHeader[6] = (byte) flags;
     System.arraycopy(packet, 0, packetWithHeader, HEADER_SIZE, packet.length);
-    return packetWithHeader;
+
+    return addChecksum(packetWithHeader);
+  }
+
+  public byte[] addChecksum(byte[] packet) {
+    CRC32 checksum = new CRC32();
+    checksum.update(packet);
+
+    long checkSumValue = checksum.getValue();
+    packet[7] = (byte) (checkSumValue >>> 32 & 0xff);
+    packet[8] = (byte) (checkSumValue >>> 24 & 0xff);
+    packet[9] = (byte) (checkSumValue >>> 16 & 0xff);
+    packet[10] = (byte) (checkSumValue >>> 8 & 0xff);
+    packet[11] = (byte) (checkSumValue & 0xff);
+    return packet;
   }
 
   public int setFlags(FileStorageHeaderFlags flag) {
@@ -91,9 +104,8 @@ public class FileStoragePacketAssembler {
   public byte[] getFileSizeByteArray(long fileSize) {
     byte[] fileSizeArray = new byte[8];
     for (int i = 1; i < 9; i++) {
-      fileSizeArray[i - 1] = (byte) (((fileSize) >>> ((8 - i) * 8)) & 0xff);
+      fileSizeArray[i - 1] = (byte) ((fileSize >>> ((8 - i) * 8)) & 0xff);
     }
     return fileSizeArray;
   }
-
 }

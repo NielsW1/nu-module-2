@@ -1,27 +1,22 @@
 package com.nedap.university.service;
 
-import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
-import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
-import static com.nedap.university.packet.FileStorageHeaderFlags.NACK;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.FINAL;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.NACK;
 import static com.nedap.university.service.FileStorageServiceHandler.HEADER_SIZE;
 import static com.nedap.university.service.FileStorageServiceHandler.PAYLOAD_SIZE;
 import static com.nedap.university.service.FileStorageServiceHandler.WINDOW_SIZE;
 
-import com.nedap.university.packet.FileStoragePacketAssembler;
-import com.nedap.university.packet.FileStoragePacketDecoder;
+import com.nedap.university.protocol.FileStoragePacketAssembler;
+import com.nedap.university.protocol.FileStoragePacketDecoder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.CountDownLatch;
 
 public class FileStorageSender {
 
@@ -33,13 +28,19 @@ public class FileStorageSender {
     this.decoder = decoder;
   }
 
+  /**
+   * Reads a file using a SeekableByteChannel and creates DatagramPackets to send.
+   * LAR: Last Acknowledgement Received
+   * @throws IOException
+   */
+
   public void sendFile(DatagramSocket socket, Path filePath, long fileSize) throws IOException {
     int bytesRead;
     int sequenceNumber = 1;
     int LAR = 0;
     int progress = 0;
     int numOfPackets = (int) (fileSize / PAYLOAD_SIZE);
-    boolean finalAck = false;
+    int LPR = 0;
     boolean finalPacketSent = false;
     SeekableByteChannel byteChannel = Files.newByteChannel(filePath, StandardOpenOption.READ);
     ByteBuffer packetBuffer = ByteBuffer.allocate(PAYLOAD_SIZE);
@@ -52,6 +53,7 @@ public class FileStorageSender {
       DatagramPacket packet;
       packetBuffer.flip();
 
+      //create packets from bytes read from the file and send them
       if (bytesRead < PAYLOAD_SIZE) {
         payload = new byte[PAYLOAD_SIZE - packetBuffer.remaining()];
         System.arraycopy(packetBuffer.array(), 0, payload, 0, payload.length);
@@ -69,17 +71,19 @@ public class FileStorageSender {
       progress = FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets,
           progress);
 
+      //if sendWindow is full or all packets have been sent, receive acknowledgements and
+      //remove them from the sendWindow
       while (sendWindow.size() >= WINDOW_SIZE || (finalPacketSent && !sendWindow.isEmpty())) {
         DatagramPacket ackPacket = assembler.createBufferPacket(HEADER_SIZE);
         socket.receive(ackPacket);
         int ackNumber = decoder.getSequenceNumber(ackPacket);
-        if (decoder.hasFlag(ackPacket, NACK)) {
+        if (decoder.hasFlag(ackPacket, NACK) && LPR != ackNumber) {
           socket.send(sendWindow.get(ackNumber));
         } else {
           for (int i = LAR + 1; i <= ackNumber; i++) {
             if (sendWindow.containsKey(i)) {
               sendWindow.remove(i);
-              LAR = ackNumber;
+              LAR = i;
             } else {
               break;
             }

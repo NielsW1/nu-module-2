@@ -1,13 +1,10 @@
 package com.nedap.university.service;
 
 import com.nedap.university.client.FileStorageClientHandler;
-import com.nedap.university.packet.FileStoragePacketAssembler;
-import com.nedap.university.packet.FileStoragePacketDecoder;
 import com.nedap.university.server.FileStorageServer;
 import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

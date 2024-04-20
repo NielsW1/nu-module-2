@@ -2,6 +2,7 @@ package com.nedap.university;
 
 import com.nedap.university.server.FileStorageServer;
 import com.nedap.university.server.QuoteServer;
+import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
 import java.net.SocketException;
 
@@ -34,6 +35,8 @@ public class Main {
         Thread.currentThread().interrupt();
       } catch (IOException e) {
         System.out.println("I/O error: " + e.getMessage());
+      } catch (FileException e) {
+        System.out.println("File error: " + e.getMessage());
       } catch (NullPointerException e) {
         System.out.println("Server is null!");
       }

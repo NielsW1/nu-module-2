@@ -1,8 +1,9 @@
 package com.nedap.university.service;
 
-import com.nedap.university.packet.FileStorageHeaderFlags;
-import com.nedap.university.packet.FileStoragePacketAssembler;
-import com.nedap.university.packet.FileStoragePacketDecoder;
+import com.nedap.university.protocol.FileStorageHeaderFlags;
+import com.nedap.university.protocol.FileStoragePacketAssembler;
+import com.nedap.university.protocol.FileStoragePacketDecoder;
+import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -12,16 +13,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
-import static com.nedap.university.packet.FileStorageHeaderFlags.ERROR;
-import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
-import static com.nedap.university.packet.FileStorageHeaderFlags.RETRIEVE;
-import static com.nedap.university.packet.FileStorageHeaderFlags.SEND;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ERROR;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ACK;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
 
 public class FileStorageServiceHandler {
   public static final int PAYLOAD_SIZE = 2048;
-  public static final int HEADER_SIZE = 8;
+  public static final int HEADER_SIZE = 12;
   public static final int PACKET_SIZE = PAYLOAD_SIZE + HEADER_SIZE;
-  public static final int WINDOW_SIZE = 10;
+  public static final int WINDOW_SIZE = 50;
 
   private final FileStoragePacketAssembler assembler;
   private final FileStoragePacketDecoder decoder;
@@ -53,7 +54,7 @@ public class FileStorageServiceHandler {
       FileStorageHeaderFlags flag) throws IOException {
     byte[] fileNameBytes = fileHandler.getFileNameBytes(filePath);
     DatagramPacket packet;
-    long fileSize = 0;
+    long fileSize;
 
     if (flag == SEND) {
       packet = assembler.createRequestPacket(Files.size(Paths.get(filePath)), fileNameBytes, assembler.setFlags(flag));
@@ -78,7 +79,7 @@ public class FileStorageServiceHandler {
     return fileSize;
   }
 
-  public void serverHandshake(DatagramSocket socket) throws IOException {
+  public void serverHandshake(DatagramSocket socket) throws IOException, FileException {
     DatagramPacket requestPacket = assembler.createBufferPacket(PACKET_SIZE);
     socket.receive(requestPacket);
     setAddressAndPort(requestPacket.getAddress(), requestPacket.getPort());
@@ -88,12 +89,14 @@ public class FileStorageServiceHandler {
     } else if (decoder.hasFlag(requestPacket, SEND)) {
       serverHandleSend(socket, requestPacket);
     } else {
-      String error = "Invalid request: No send/retrieve flag";
+      String error = "Invalid request, No send/retrieve flag";
       socket.send(assembler.createPacket(error.getBytes(), 0, assembler.setFlags(ERROR)));
+      throw new IOException(error);
     }
   }
 
-  public void serverHandleSend(DatagramSocket socket, DatagramPacket packet) throws IOException {
+  public void serverHandleSend(DatagramSocket socket, DatagramPacket packet)
+      throws IOException, FileException {
     String fileName = decoder.getFileName(packet);
 
     System.out.println("Request from: " + address.toString() + " to send file: " + fileName);
@@ -101,7 +104,8 @@ public class FileStorageServiceHandler {
     if (fileSize > (Math.pow(2, 31) - 1) * PAYLOAD_SIZE) {
       String error = "File is too large to send!";
       socket.send(assembler.createPacket(error.getBytes(), 0, assembler.setFlags(ERROR)));
-      System.out.println("Error: " + error);
+      throw new FileException(error);
+
     } else {
       socket.send(assembler.createPacket(assembler.getFileSizeByteArray(fileSize), 0,
           assembler.setFlags(Set.of(ACK, SEND))));
@@ -111,14 +115,16 @@ public class FileStorageServiceHandler {
     }
   }
 
-  public void serverHandleRetrieve(DatagramSocket socket, DatagramPacket packet) throws IOException {
+  public void serverHandleRetrieve(DatagramSocket socket, DatagramPacket packet)
+      throws IOException, FileException {
     String fileName = decoder.getFileName(packet);
     System.out.println("Request from: " + address.toString() + " to retrieve file: " + fileName);
     if (!fileHandler.fileExists(fileName)) {
       String error = "File does not exist or is not in this directory";
       socket.send(
           assembler.createPacket(error.getBytes(), 0, assembler.setFlags(ERROR)));
-      System.out.println("Error: " + error);
+      throw new FileException(error);
+
     } else {
       long fileSize = fileHandler.getFileSize(fileName);
       socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),

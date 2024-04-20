@@ -35,16 +35,6 @@ public class FileStorageFileHandler {
     return Paths.get((fileStoragePath + "/" + fileName));
   }
 
-  public byte[] getByteArrayFromMap(HashMap<Integer, byte[]> receivedPacketMap) {
-    ByteArrayOutputStream combinedArray = new ByteArrayOutputStream();
-    List<Integer> sequenceNumbers = new ArrayList<>(receivedPacketMap.keySet());
-    Collections.sort(sequenceNumbers);
-    for (Integer sequenceNumber : sequenceNumbers) {
-      combinedArray.write(receivedPacketMap.get(sequenceNumber), 0, receivedPacketMap.get(sequenceNumber).length);
-    }
-    return combinedArray.toByteArray();
-  }
-
   public boolean fileExists(String fileName) {
     return Files.exists(Paths.get(fileStoragePath + "/" + fileName));
   }
@@ -53,7 +43,7 @@ public class FileStorageFileHandler {
     return Paths.get(fileStoragePath + "/" + fileName);
   }
 
-  public long getFileSize(String fileName) throws IOException{
+  public long getFileSize(String fileName) throws IOException {
     return Files.size(getFileStoragePath(fileName));
   }
 
