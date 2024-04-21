@@ -44,8 +44,7 @@ public class FileStorageReceiver {
     int LFR = 0;
     boolean finalPacket = false;
     int numOfPackets = (int) (fileSize / PAYLOAD_SIZE);
-    int progress = 0;
-    FileStorageProgressBar.initProgressBar(fileSize);
+    long startTime = System.currentTimeMillis();
 
     while (!finalPacket) {
       int LAF = LFR + WINDOW_SIZE;
@@ -70,18 +69,18 @@ public class FileStorageReceiver {
             receiveWindow.remove(i);
             LFR = i;
 
-            progress = FileStorageProgressBar.updateProgressBar(i, numOfPackets, progress);
+            FileStorageProgressBar.updateProgressBar(i, numOfPackets, startTime);
           } else {
             break;
           }
         }
         socket.send(assembler.createAckPacket(LFR, ACK));
-      } else if (sequenceNumber > NEF) {
+      } else if (sequenceNumber > NEF && sequenceNumber <= LAF) {
         receiveWindow.put(sequenceNumber, packet);
         socket.send(assembler.createAckPacket(NEF, NACK));
       }
     }
+    System.out.println();
     byteChannel.close();
-    FileStorageProgressBar.finalizeProgressBar();
   }
 }

@@ -79,6 +79,7 @@ public class FileStoragePacketDecoder {
   public boolean hasFlag(DatagramPacket packet, FileStorageHeaderFlags flag) {
     int flags = packet.getData()[6];
     return switch (flag) {
+      case LIST -> (flags >>> 6 & 1) == 1;
       case ERROR -> (flags >>> 5 & 1) == 1;
       case FINAL -> (flags >>> 4 & 1) == 1;
       case NACK -> (flags >>> 3 & 1) == 1;

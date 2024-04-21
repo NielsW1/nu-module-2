@@ -79,23 +79,14 @@ public class FileStoragePacketAssembler {
     int flagByte = 0;
 
     for (FileStorageHeaderFlags flag : flags) {
-      if (flag == ERROR) {
-        flagByte |= 1 << 5;
-      }
-      if (flag == FINAL) {
-        flagByte |= 1 << 4;
-      }
-      if (flag == NACK) {
-        flagByte |= 1 << 3;
-      }
-      if (flag == ACK) {
-        flagByte |= 1 << 2;
-      }
-      if (flag == RETRIEVE) {
-        flagByte |= 1 << 1;
-      }
-      if (flag == SEND) {
-        flagByte |= 1;
+      switch (flag) {
+        case LIST -> flagByte |= 1 << 6;
+        case ERROR -> flagByte |= 1 << 5;
+        case FINAL -> flagByte |= 1 << 4;
+        case NACK -> flagByte |= 1 << 3;
+        case ACK -> flagByte |= 1 << 2;
+        case RETRIEVE -> flagByte |= 1 << 1;
+        case SEND -> flagByte |= 1;
       }
     }
     return flagByte;

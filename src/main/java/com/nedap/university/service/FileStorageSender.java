@@ -38,15 +38,14 @@ public class FileStorageSender {
     int bytesRead;
     int sequenceNumber = 1;
     int LAR = 0;
-    int progress = 0;
-    int numOfPackets = (int) (fileSize / PAYLOAD_SIZE);
+    int numOfPackets = (int) (fileSize / PAYLOAD_SIZE) + 1;
     int LPR = 0;
     boolean finalPacketSent = false;
     SeekableByteChannel byteChannel = Files.newByteChannel(filePath, StandardOpenOption.READ);
     ByteBuffer packetBuffer = ByteBuffer.allocate(PAYLOAD_SIZE);
     HashMap<Integer, DatagramPacket> sendWindow = new HashMap<>();
 
-    FileStorageProgressBar.initProgressBar(fileSize);
+    long startTime = System.currentTimeMillis();
 
     while ((bytesRead = byteChannel.read(packetBuffer)) != -1) {
       DatagramPacket packet;
@@ -67,8 +66,7 @@ public class FileStorageSender {
       sequenceNumber++;
       packetBuffer.clear();
 
-      progress = FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets,
-          progress);
+      FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets, startTime);
 
       //if sendWindow is full or all packets have been sent, receive acknowledgements and
       //remove them from the sendWindow
@@ -90,7 +88,7 @@ public class FileStorageSender {
         }
       }
     }
-    FileStorageProgressBar.finalizeProgressBar();
+    System.out.println();
   }
 }
 

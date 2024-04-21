@@ -3,24 +3,24 @@ package com.nedap.university.client;
 import com.nedap.university.server.FileStorageServer;
 import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class FileStorageClient {
+
   private FileStorageClientHandler clientHandler;
 
   public FileStorageClient() {
     runFileStorageClient();
   }
 
-  public void runFileStorageClient(){
+  public void runFileStorageClient() {
     Scanner input = new Scanner(System.in);
 
     try {
-      clientHandler = new FileStorageClientHandler(FileStorageServer.PI_HOSTNAME, FileStorageServer.PI_PORT);
+      clientHandler = new FileStorageClientHandler(FileStorageServer.PI_HOSTNAME,
+          FileStorageServer.PI_PORT);
       System.out.println("Welcome to Niels' Raspberry Pi file storage system!");
 
       while (true) {
