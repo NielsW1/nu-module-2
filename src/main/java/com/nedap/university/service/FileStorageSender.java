@@ -49,13 +49,12 @@ public class FileStorageSender {
     FileStorageProgressBar.initProgressBar(fileSize);
 
     while ((bytesRead = byteChannel.read(packetBuffer)) != -1) {
-      byte[] payload;
       DatagramPacket packet;
       packetBuffer.flip();
 
       //create packets from bytes read from the file and send them
       if (bytesRead < PAYLOAD_SIZE) {
-        payload = new byte[PAYLOAD_SIZE - packetBuffer.remaining()];
+        byte[] payload = new byte[packetBuffer.remaining()];
         System.arraycopy(packetBuffer.array(), 0, payload, 0, payload.length);
         packet = assembler.createPacket(payload, sequenceNumber,
             assembler.setFlags(FINAL));

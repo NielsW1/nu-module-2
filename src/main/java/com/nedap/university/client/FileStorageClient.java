@@ -42,7 +42,7 @@ public class FileStorageClient {
             continue;
           }
           if (command == 3) {
-            System.out.println("Exiting client.....");
+            closeClient();
             break;
           }
           try {
@@ -73,7 +73,7 @@ public class FileStorageClient {
             inputLine = input.nextLine();
             if (inputLine.contains("y")) {
             } else {
-              System.out.println("Exiting client.....");
+              closeClient();
               break;
             }
           }
@@ -86,6 +86,11 @@ public class FileStorageClient {
     } catch (IOException e) {
       System.out.println("I/O error: " + e.getMessage());
     }
+  }
+
+  public void closeClient() {
+    clientHandler.closeSocket();
+    System.out.println("Exiting client.....");
   }
 
   public static void main(String[] args) {

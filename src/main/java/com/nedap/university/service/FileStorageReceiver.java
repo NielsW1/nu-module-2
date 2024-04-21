@@ -62,21 +62,21 @@ public class FileStorageReceiver {
         receiveWindow.put(sequenceNumber, packet);
         for (int i = NEF; i <= LAF; i++) {
           if (receiveWindow.containsKey(i)) {
+            if (decoder.hasFlag(receiveWindow.get(i), FINAL)) {
+              finalPacket = true;
+            }
             ByteBuffer packetBuffer = ByteBuffer.wrap(decoder.getPayload(receiveWindow.get(i)));
-            byteChannel.position((long) i * PAYLOAD_SIZE);
             byteChannel.write(packetBuffer);
             receiveWindow.remove(i);
             LFR = i;
+
             progress = FileStorageProgressBar.updateProgressBar(i, numOfPackets, progress);
-            if (decoder.hasFlag(packet, FINAL)) {
-              finalPacket = true;
-            }
           } else {
             break;
           }
         }
         socket.send(assembler.createAckPacket(LFR, ACK));
-      } else if (sequenceNumber > NEF){
+      } else if (sequenceNumber > NEF) {
         receiveWindow.put(sequenceNumber, packet);
         socket.send(assembler.createAckPacket(NEF, NACK));
       }

@@ -41,6 +41,7 @@ public class Main {
         System.out.println("Server is null!");
       }
     }
+    server.closeSocket();
     System.out.println("Stopped");
     running = false;
   }

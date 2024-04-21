@@ -19,7 +19,8 @@ import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
 import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
 
 public class FileStorageServiceHandler {
-  public static final int PAYLOAD_SIZE = 2048;
+
+  public static final int PAYLOAD_SIZE = 4096;
   public static final int HEADER_SIZE = 12;
   public static final int PACKET_SIZE = PAYLOAD_SIZE + HEADER_SIZE;
   public static final int WINDOW_SIZE = 50;
@@ -29,28 +30,30 @@ public class FileStorageServiceHandler {
   private final FileStorageFileHandler fileHandler;
   private final FileStorageSender sender;
   private final FileStorageReceiver receiver;
+  private final DatagramSocket socket;
   private InetAddress address;
   private int port;
 
-  public FileStorageServiceHandler(String fileStoragePath) throws IOException {
+  public FileStorageServiceHandler(DatagramSocket socket, String fileStoragePath) throws IOException {
     assembler = new FileStoragePacketAssembler(this);
     decoder = new FileStoragePacketDecoder();
     fileHandler = new FileStorageFileHandler(fileStoragePath);
     sender = new FileStorageSender(assembler, decoder);
     receiver = new FileStorageReceiver(assembler, decoder);
+    this.socket = socket;
   }
 
-  public void sendFile(DatagramSocket socket, Path filePath, long fileSize) throws IOException {
+  public void sendFile(Path filePath, long fileSize) throws IOException {
     sender.sendFile(socket, filePath, fileSize);
   }
 
-  public String receiveFile(DatagramSocket socket, String fileName, long fileSize) throws IOException {
+  public String receiveFile(String fileName, long fileSize) throws IOException {
     Path filePath = fileHandler.updateFileName(fileName);
     receiver.receiveFile(socket, filePath, fileSize);
     return filePath.toString();
   }
 
-  public long clientHandshake(DatagramSocket socket, String filePath,
+  public long clientHandshake(String filePath,
       FileStorageHeaderFlags flag) throws IOException {
     byte[] fileNameBytes = fileHandler.getFileNameBytes(filePath);
     DatagramPacket packet;
@@ -79,15 +82,15 @@ public class FileStorageServiceHandler {
     return fileSize;
   }
 
-  public void serverHandshake(DatagramSocket socket) throws IOException, FileException {
+  public void serverHandshake() throws IOException, FileException {
     DatagramPacket requestPacket = assembler.createBufferPacket(PACKET_SIZE);
     socket.receive(requestPacket);
     setAddressAndPort(requestPacket.getAddress(), requestPacket.getPort());
 
     if (decoder.hasFlag(requestPacket, RETRIEVE)) {
-      serverHandleRetrieve(socket, requestPacket);
+      serverHandleRetrieve(requestPacket);
     } else if (decoder.hasFlag(requestPacket, SEND)) {
-      serverHandleSend(socket, requestPacket);
+      serverHandleSend(requestPacket);
     } else {
       String error = "Invalid request, No send/retrieve flag";
       socket.send(assembler.createPacket(error.getBytes(), 0, assembler.setFlags(ERROR)));
@@ -95,7 +98,7 @@ public class FileStorageServiceHandler {
     }
   }
 
-  public void serverHandleSend(DatagramSocket socket, DatagramPacket packet)
+  public void serverHandleSend(DatagramPacket packet)
       throws IOException, FileException {
     String fileName = decoder.getFileName(packet);
 
@@ -109,13 +112,13 @@ public class FileStorageServiceHandler {
     } else {
       socket.send(assembler.createPacket(assembler.getFileSizeByteArray(fileSize), 0,
           assembler.setFlags(Set.of(ACK, SEND))));
-      String outputPath = receiveFile(socket, fileName, fileSize);
+      String outputPath = receiveFile(fileName, fileSize);
       System.out.println(
           "File received and stored at: " + outputPath);
     }
   }
 
-  public void serverHandleRetrieve(DatagramSocket socket, DatagramPacket packet)
+  public void serverHandleRetrieve(DatagramPacket packet)
       throws IOException, FileException {
     String fileName = decoder.getFileName(packet);
     System.out.println("Request from: " + address.toString() + " to retrieve file: " + fileName);
@@ -129,7 +132,7 @@ public class FileStorageServiceHandler {
       long fileSize = fileHandler.getFileSize(fileName);
       socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),
           assembler.setFlags(Set.of(ACK, RETRIEVE))));
-      sendFile(socket, fileHandler.getFileStoragePath(fileName), fileSize);
+      sendFile(fileHandler.getFileStoragePath(fileName), fileSize);
       System.out.println("File sent successfully");
     }
   }
@@ -146,4 +149,5 @@ public class FileStorageServiceHandler {
   public int getPort() {
     return this.port;
   }
+
 }

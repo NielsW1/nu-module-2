@@ -20,11 +20,19 @@ public class FileStorageServer {
   }
 
   public FileStorageServer(String fileStoragePath) throws IOException {
-    serviceHandler = new FileStorageServiceHandler(fileStoragePath);
     socket = new DatagramSocket(PI_PORT);
+    serviceHandler = new FileStorageServiceHandler(socket, fileStoragePath);
   }
 
   public void runServer() throws IOException, FileException {
-    serviceHandler.serverHandshake(socket);
+    serviceHandler.serverHandshake();
+  }
+
+  public void closeSocket() {
+    socket.close();
+  }
+
+  public boolean isClosed() {
+    return socket.isClosed();
   }
 }

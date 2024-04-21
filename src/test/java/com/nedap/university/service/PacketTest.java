@@ -3,11 +3,14 @@ package com.nedap.university.service;
 
 import com.nedap.university.protocol.FileStoragePacketAssembler;
 import com.nedap.university.protocol.FileStoragePacketDecoder;
+import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +43,7 @@ public class PacketTest {
     try {
       address = InetAddress.getByName(HOSTNAME);
       decoder = new FileStoragePacketDecoder();
-      serviceHandler = new FileStorageServiceHandler("./example_files");
+      serviceHandler = new FileStorageServiceHandler(new DatagramSocket(), "./example_files");
       serviceHandler.setAddressAndPort(address, PORT);
       assembler = new FileStoragePacketAssembler(serviceHandler);
       fileHandler = new FileStorageFileHandler("./example_files");

@@ -17,9 +17,9 @@ public class FileStorageClientHandler {
   private final DatagramSocket socket;
 
   public FileStorageClientHandler(String address, int port) throws IOException {
-    serviceHandler = new FileStorageServiceHandler(System.getProperty("user.home") + "/Downloads");
-    serviceHandler.setAddressAndPort(InetAddress.getByName(address), port);
     socket = new DatagramSocket();
+    serviceHandler = new FileStorageServiceHandler(socket, System.getProperty("user.home") + "/Downloads");
+    serviceHandler.setAddressAndPort(InetAddress.getByName(address), port);
   }
 
   public void sendFile(String pathToFile) throws IOException, FileException {
@@ -27,16 +27,24 @@ public class FileStorageClientHandler {
     if (Files.notExists(filePath)) {
       throw new FileException();
     }
-    long fileSize = serviceHandler.clientHandshake(socket, pathToFile, SEND);
+    long fileSize = serviceHandler.clientHandshake(pathToFile, SEND);
     System.out.println("Handshake successful, Sending file...");
-    serviceHandler.sendFile(socket, filePath, fileSize);
+    serviceHandler.sendFile(filePath, fileSize);
     System.out.println("File sent successfully");
   }
 
   public void retrieveFile(String fileName) throws IOException {
-    long fileSize = serviceHandler.clientHandshake(socket, fileName, RETRIEVE);
+    long fileSize = serviceHandler.clientHandshake(fileName, RETRIEVE);
     System.out.println("Handshake successful, retrieving file...");
-    String outputPath = serviceHandler.receiveFile(socket, fileName, fileSize);
+    String outputPath = serviceHandler.receiveFile(fileName, fileSize);
     System.out.println("File downloaded to " + outputPath);
+  }
+
+  public void closeSocket() {
+    socket.close();
+  }
+
+  public DatagramSocket getSocket() {
+    return socket;
   }
 }
