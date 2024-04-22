@@ -39,13 +39,11 @@ public class FileStorageSender {
     int sequenceNumber = 1;
     int LAR = 0;
     int numOfPackets = (int) (fileSize / PAYLOAD_SIZE) + 1;
-    int LPR = 0;
     boolean finalPacketSent = false;
+    long startTime = System.currentTimeMillis();
     SeekableByteChannel byteChannel = Files.newByteChannel(filePath, StandardOpenOption.READ);
     ByteBuffer packetBuffer = ByteBuffer.allocate(PAYLOAD_SIZE);
     HashMap<Integer, DatagramPacket> sendWindow = new HashMap<>();
-
-    long startTime = System.currentTimeMillis();
 
     while ((bytesRead = byteChannel.read(packetBuffer)) != -1) {
       DatagramPacket packet;
@@ -63,10 +61,9 @@ public class FileStorageSender {
       }
       socket.send(packet);
       sendWindow.put(sequenceNumber, packet);
-      sequenceNumber++;
       packetBuffer.clear();
 
-      FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets, startTime);
+      FileStorageProgressBar.updateProgressBar(sequenceNumber++, numOfPackets, startTime);
 
       //if sendWindow is full or all packets have been sent, receive acknowledgements and
       //remove them from the sendWindow
@@ -74,7 +71,7 @@ public class FileStorageSender {
         DatagramPacket ackPacket = assembler.createBufferPacket(HEADER_SIZE);
         socket.receive(ackPacket);
         int ackNumber = decoder.getSequenceNumber(ackPacket);
-        if (decoder.hasFlag(ackPacket, NACK) && LPR != ackNumber) {
+        if (decoder.hasFlag(ackPacket, NACK)) {
           socket.send(sendWindow.get(ackNumber));
         } else {
           for (int i = LAR + 1; i <= ackNumber; i++) {
@@ -91,4 +88,3 @@ public class FileStorageSender {
     System.out.println();
   }
 }
-

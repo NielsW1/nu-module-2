@@ -18,6 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 public class FileStorageReceiver {
   private final FileStoragePacketAssembler assembler;
@@ -45,6 +47,8 @@ public class FileStorageReceiver {
     boolean finalPacket = false;
     int numOfPackets = (int) (fileSize / PAYLOAD_SIZE);
     long startTime = System.currentTimeMillis();
+    Timer timer = new Timer();
+    FileStorageTimeOut timeout = null;
 
     while (!finalPacket) {
       int LAF = LFR + WINDOW_SIZE;
@@ -58,6 +62,10 @@ public class FileStorageReceiver {
         continue;
       }
       if (sequenceNumber == NEF) {
+        if (timeout != null) {
+          timeout.cancel();
+          timeout = null;
+        }
         receiveWindow.put(sequenceNumber, packet);
         for (int i = NEF; i <= LAF; i++) {
           if (receiveWindow.containsKey(i)) {
@@ -75,9 +83,13 @@ public class FileStorageReceiver {
           }
         }
         socket.send(assembler.createAckPacket(LFR, ACK));
+
       } else if (sequenceNumber > NEF && sequenceNumber <= LAF) {
         receiveWindow.put(sequenceNumber, packet);
-        socket.send(assembler.createAckPacket(NEF, NACK));
+        if (timeout == null) {
+          timeout = new FileStorageTimeOut(socket, assembler.createAckPacket(NEF, NACK));
+          timer.scheduleAtFixedRate(timeout, 0, 1000);
+        }
       }
     }
     System.out.println();

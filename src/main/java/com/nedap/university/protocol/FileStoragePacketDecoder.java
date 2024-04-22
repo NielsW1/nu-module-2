@@ -58,7 +58,6 @@ public class FileStoragePacketDecoder {
 
   public long getChecksum(DatagramPacket packet) {
     long checksum = 0;
-    checksum |= (long) (packet.getData()[7] & 0xff) << 32;
     checksum |= (long) (packet.getData()[8] & 0xff) << 24;
     checksum |= (long) (packet.getData()[9] & 0xff) << 16;
     checksum |= (long) (packet.getData()[10] & 0xff) << 8;
@@ -79,6 +78,7 @@ public class FileStoragePacketDecoder {
   public boolean hasFlag(DatagramPacket packet, FileStorageHeaderFlags flag) {
     int flags = packet.getData()[6];
     return switch (flag) {
+      case REMOVE -> (flags >>> 7 & 1) == 1;
       case LIST -> (flags >>> 6 & 1) == 1;
       case ERROR -> (flags >>> 5 & 1) == 1;
       case FINAL -> (flags >>> 4 & 1) == 1;

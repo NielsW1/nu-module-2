@@ -66,6 +66,7 @@ public class FileStorageClient {
             }
           } catch (IOException | FileException e) {
             System.out.println("I/O error: " + e.getMessage() + "\n");
+            e.printStackTrace();
             continue;
           }
           System.out.println("Would you like to send/retrieve another file? (y/n)");
@@ -81,10 +82,13 @@ public class FileStorageClient {
       }
     } catch (UnknownHostException e) {
       System.out.println("Unknown host: " + e.getMessage());
+      e.printStackTrace();
     } catch (SocketException e) {
       System.out.println("Socket error: " + e.getMessage());
+      e.printStackTrace();
     } catch (IOException e) {
       System.out.println("I/O error: " + e.getMessage());
+      e.printStackTrace();
     }
   }
 

@@ -1,11 +1,5 @@
 package com.nedap.university.protocol;
 
-import static com.nedap.university.protocol.FileStorageHeaderFlags.ACK;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.ERROR;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.FINAL;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.NACK;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
 import static com.nedap.university.service.FileStorageServiceHandler.HEADER_SIZE;
 
 import com.nedap.university.service.FileStorageServiceHandler;
@@ -63,7 +57,6 @@ public class FileStoragePacketAssembler {
     checksum.update(packet);
 
     long checkSumValue = checksum.getValue();
-    packet[7] = (byte) (checkSumValue >>> 32 & 0xff);
     packet[8] = (byte) (checkSumValue >>> 24 & 0xff);
     packet[9] = (byte) (checkSumValue >>> 16 & 0xff);
     packet[10] = (byte) (checkSumValue >>> 8 & 0xff);
@@ -80,6 +73,7 @@ public class FileStoragePacketAssembler {
 
     for (FileStorageHeaderFlags flag : flags) {
       switch (flag) {
+        case REMOVE -> flagByte |= 1 << 7;
         case LIST -> flagByte |= 1 << 6;
         case ERROR -> flagByte |= 1 << 5;
         case FINAL -> flagByte |= 1 << 4;

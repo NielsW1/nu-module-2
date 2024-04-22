@@ -11,6 +11,6 @@ package com.nedap.university.protocol;
  */
 
 public enum FileStorageHeaderFlags {
-  LIST, ERROR, FINAL, NACK, ACK, RETRIEVE, SEND
+  REMOVE, LIST, ERROR, FINAL, NACK, ACK, RETRIEVE, SEND
 }
 
