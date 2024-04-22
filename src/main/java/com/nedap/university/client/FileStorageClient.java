@@ -1,24 +1,26 @@
 package com.nedap.university.client;
 
+import com.nedap.university.server.FileStorageServer;
+import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class FileStorageClient {
+
   private FileStorageClientHandler clientHandler;
 
   public FileStorageClient() {
     runFileStorageClient();
   }
 
-  public void runFileStorageClient(){
+  public void runFileStorageClient() {
     Scanner input = new Scanner(System.in);
 
     try {
-      clientHandler = new FileStorageClientHandler();
+      clientHandler = new FileStorageClientHandler(FileStorageServer.PI_HOSTNAME,
+          FileStorageServer.PI_PORT);
       System.out.println("Welcome to Niels' Raspberry Pi file storage system!");
 
       while (true) {
@@ -40,7 +42,7 @@ public class FileStorageClient {
             continue;
           }
           if (command == 3) {
-            System.out.println("Exiting client.....");
+            closeClient();
             break;
           }
           try {
@@ -62,8 +64,9 @@ public class FileStorageClient {
                 System.out.println("Invalid input: " + command);
                 continue;
             }
-          } catch (IOException e) {
-            System.out.println(e.getMessage() + "\n");
+          } catch (IOException | FileException e) {
+            System.out.println("I/O error: " + e.getMessage() + "\n");
+            e.printStackTrace();
             continue;
           }
           System.out.println("Would you like to send/retrieve another file? (y/n)");
@@ -71,7 +74,7 @@ public class FileStorageClient {
             inputLine = input.nextLine();
             if (inputLine.contains("y")) {
             } else {
-              System.out.println("Exiting client.....");
+              closeClient();
               break;
             }
           }
@@ -79,11 +82,19 @@ public class FileStorageClient {
       }
     } catch (UnknownHostException e) {
       System.out.println("Unknown host: " + e.getMessage());
+      e.printStackTrace();
     } catch (SocketException e) {
       System.out.println("Socket error: " + e.getMessage());
+      e.printStackTrace();
     } catch (IOException e) {
       System.out.println("I/O error: " + e.getMessage());
+      e.printStackTrace();
     }
+  }
+
+  public void closeClient() {
+    clientHandler.closeSocket();
+    System.out.println("Exiting client.....");
   }
 
   public static void main(String[] args) {

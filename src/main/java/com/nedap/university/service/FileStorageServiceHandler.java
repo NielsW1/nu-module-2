@@ -1,151 +1,153 @@
 package com.nedap.university.service;
 
-import com.nedap.university.packet.FileStorageHeaderFlags;
-import com.nedap.university.packet.FileStoragePacketAssembler;
-import com.nedap.university.packet.FileStoragePacketDecoder;
+import com.nedap.university.protocol.FileStorageHeaderFlags;
+import com.nedap.university.protocol.FileStoragePacketAssembler;
+import com.nedap.university.protocol.FileStoragePacketDecoder;
+import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketTimeoutException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Queue;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 
-import static com.nedap.university.packet.FileStorageHeaderFlags.ERROR;
-import static com.nedap.university.packet.FileStorageHeaderFlags.ACK;
-import static com.nedap.university.packet.FileStorageHeaderFlags.MODE;
-import static com.nedap.university.packet.FileStorageHeaderFlags.FINAL;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ERROR;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ACK;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
 
 public class FileStorageServiceHandler {
-  public static final int PI_PORT = 8080;
-  public static final String PI_HOSTNAME = "172.16.1.1";
-  public static final int PAYLOAD_SIZE = 16384;
-  public static final int HEADER_SIZE = 8;
 
-  private final InetAddress piAddress;
-  private final FileStoragePacketAssembler packetAssembler;
-  private final FileStoragePacketDecoder packetDecoder;
+  public static final int PAYLOAD_SIZE = 4096;
+  public static final int HEADER_SIZE = 12;
+  public static final int PACKET_SIZE = PAYLOAD_SIZE + HEADER_SIZE;
+  public static final int WINDOW_SIZE = 50;
+
+  private final FileStoragePacketAssembler assembler;
+  private final FileStoragePacketDecoder decoder;
   private final FileStorageFileHandler fileHandler;
+  private final FileStorageSender sender;
+  private final FileStorageReceiver receiver;
+  private final DatagramSocket socket;
+  private InetAddress address;
+  private int port;
 
-  public FileStorageServiceHandler(String fileStoragePath) throws IOException {
-    packetAssembler = new FileStoragePacketAssembler();
-    packetDecoder = new FileStoragePacketDecoder();
+  public FileStorageServiceHandler(DatagramSocket socket, String fileStoragePath) throws IOException {
+    assembler = new FileStoragePacketAssembler(this);
+    decoder = new FileStoragePacketDecoder();
     fileHandler = new FileStorageFileHandler(fileStoragePath);
-    piAddress = InetAddress.getByName(PI_HOSTNAME);
+    sender = new FileStorageSender(assembler, decoder);
+    receiver = new FileStorageReceiver(assembler, decoder);
+    this.socket = socket;
   }
 
-  public void sendFile(DatagramSocket socket, String filePath) throws IOException {
-    sendFile(socket, piAddress, PI_PORT, filePath);
+  public void sendFile(Path filePath, long fileSize) throws IOException {
+    sender.sendFile(socket, filePath, fileSize);
   }
 
-  public void sendFile(DatagramSocket socket, InetAddress address, int port, String filePath) throws IOException {
-    byte[] fileBytes = fileHandler.getFileBytes(filePath);
-    Queue<DatagramPacket> packetQueue = packetAssembler.createPacketQueue(address, port, fileBytes);
+  public String receiveFile(String fileName, long fileSize) throws IOException {
+    Path filePath = fileHandler.updateFileName(fileName);
+    receiver.receiveFile(socket, filePath, fileSize);
+    return filePath.toString();
+  }
 
-    while (!packetQueue.isEmpty()) {
-      DatagramPacket packetToSend = packetQueue.poll();
-      int sequenceNumber = packetDecoder.getSequenceNumber(packetToSend);
+  public long clientHandshake(String filePath,
+      FileStorageHeaderFlags flag) throws IOException {
+    byte[] fileNameBytes = fileHandler.getFileNameBytes(filePath);
+    DatagramPacket packet;
+    long fileSize;
 
-      while (true) {
-        socket.send(packetToSend);
-        DatagramPacket response = awaitPacket(socket, packetToSend);
-
-        if (packetDecoder.hasFlag(response, ERROR)) {
-          throw new IOException(new String(packetDecoder.getPayload(response)));
-        }
-        if (packetDecoder.hasFlag(response, ACK) && packetDecoder.getSequenceNumber(response) == sequenceNumber) {
-          break;
-        }
-      }
+    if (flag == SEND) {
+      packet = assembler.createRequestPacket(Files.size(Paths.get(filePath)), fileNameBytes, assembler.setFlags(flag));
+    } else {
+      packet = assembler.createRequestPacket(0, fileNameBytes, assembler.setFlags(flag));
     }
-  }
-
-  public String receiveFile(DatagramSocket socket, String fileName) throws IOException {
-    return receiveFile(socket, piAddress, PI_PORT, fileName);
-  }
-
-  public String receiveFile(DatagramSocket socket, InetAddress address, int port, String fileName) throws IOException {
-    HashMap<Integer, byte[]> receivedPacketMap = new HashMap<>();
-    boolean finalPacket = false;
-
-    while (!finalPacket) {
-      DatagramPacket receivedPacket = packetAssembler.createBufferPacket();
-      socket.receive(receivedPacket);
-
-      int sequenceNumber = packetDecoder.getSequenceNumber(receivedPacket);
-
-      if (!receivedPacketMap.containsKey(sequenceNumber)) {
-        byte[] payload = packetDecoder.getPayload(receivedPacket);
-
-        if (packetDecoder.hasFlag(receivedPacket, FINAL)) {
-          payload = Arrays.copyOfRange(payload, 0, packetDecoder.getPayloadSize(receivedPacket));
-          finalPacket = true;
-        }
-        receivedPacketMap.put(sequenceNumber, payload);
-        socket.send(packetAssembler.createAcknowledgementPacket(address, port, sequenceNumber));
-      }
-    }
-    return fileHandler.writeBytesToFile(fileHandler.getByteArrayFromMap(receivedPacketMap), fileName);
-  }
-
-  public DatagramPacket awaitPacket(DatagramSocket socket, DatagramPacket packet) throws IOException {
-    socket.setSoTimeout(100);
-    while (true) {
-      DatagramPacket receivedPacket = packetAssembler.createBufferPacket();
-      try {
-        socket.receive(receivedPacket);
-        return receivedPacket;
-      } catch (SocketTimeoutException e) {
-        socket.send(packet);
-        System.out.println("Retransmitting packet: " + packetDecoder.getSequenceNumber(packet));
-      }
-    }
-  }
-
-  public boolean clientHandshake(DatagramSocket socket, String filePath,
-      Set<FileStorageHeaderFlags> flagSet) throws IOException {
-    int flags = packetAssembler.setFlags(flagSet);
-    byte[] requestPacket = fileHandler.getFileNameBytes(filePath);
-    requestPacket = packetAssembler.addPacketHeader(requestPacket, 0, flags, requestPacket.length);
-    DatagramPacket packet = packetAssembler.createDataPacket(requestPacket, piAddress, PI_PORT);
     socket.send(packet);
 
-    DatagramPacket receivedPacket = packetAssembler.createBufferPacket();
-    socket.receive(receivedPacket);
-    if (packetDecoder.hasFlag(receivedPacket, ERROR)) {
-      throw new IOException(new String(packetDecoder.getPayload(receivedPacket)));
-    }
-    if (!packetDecoder.hasFlag(receivedPacket, ACK)) {
-      throw new IOException("No acknowledgement received from server");
-    }
-    return true;
-  }
+    while (true) {
+      DatagramPacket receivedPacket = assembler.createBufferPacket(PACKET_SIZE);
+      socket.receive(receivedPacket);
 
-  public void serverHandshake(DatagramSocket socket) throws IOException {
-    DatagramPacket requestPacket = packetAssembler.createBufferPacket();
-    socket.receive(requestPacket);
-    InetAddress address = requestPacket.getAddress();
-    int port = requestPacket.getPort();
-    String fileName = new String(packetDecoder.getPayload(requestPacket));
-
-    if (packetDecoder.hasFlag(requestPacket, MODE)) {
-      System.out.println("Request from: " + address.toString() + " to retrieve file: " + fileName);
-      if (fileHandler.fileExists(fileName)) {
-        socket.send(packetAssembler.createAcknowledgementPacket(address, port, 0));
-        sendFile(socket, address, port, fileHandler.getFileStoragePath() + "/" + fileName);
-        System.out.println("File sent successfully");
-      } else {
-        socket.send(
-            packetAssembler.createErrorPacket(address, port, 0, FileStorageFileHandler.FILE_ERROR));
-        System.out.println("Error: " + FileStorageFileHandler.FILE_ERROR);
+      if (decoder.hasFlag(receivedPacket, ERROR)) {
+        throw new IOException(new String(decoder.getPayload(receivedPacket)));
       }
+      if (decoder.hasFlag(receivedPacket, ACK) && (decoder.hasFlag(receivedPacket, SEND)
+          || decoder.hasFlag(receivedPacket, RETRIEVE))) {
+        fileSize = decoder.getFileSize(receivedPacket);
+        break;
+      }
+    }
+    return fileSize;
+  }
+
+  public void serverHandshake() throws IOException, FileException {
+    DatagramPacket requestPacket = assembler.createBufferPacket(PACKET_SIZE);
+    socket.receive(requestPacket);
+    setAddressAndPort(requestPacket.getAddress(), requestPacket.getPort());
+
+    if (decoder.hasFlag(requestPacket, RETRIEVE)) {
+      serverHandleRetrieve(requestPacket);
+    } else if (decoder.hasFlag(requestPacket, SEND)) {
+      serverHandleSend(requestPacket);
     } else {
-      System.out.println("Request from: " + address.toString() + " to send file: " + fileName);
-      socket.send(packetAssembler.createAcknowledgementPacket(address, port, 0));
-      String outputFile = receiveFile(socket, address, port, fileName);
-      System.out.println("File received and stored in: " + fileHandler.getFileStoragePath() + "/" + outputFile);
+      String error = "Invalid request, No send/retrieve flag";
+      socket.send(assembler.createPacket(error.getBytes(), 0, assembler.setFlags(ERROR)));
+      throw new IOException(error);
     }
   }
+
+  public void serverHandleSend(DatagramPacket packet)
+      throws IOException, FileException {
+    String fileName = decoder.getFileName(packet);
+
+    System.out.println("Request from: " + address.toString() + " to send file: " + fileName);
+    long fileSize = decoder.getFileSize(packet);
+    if (fileSize > (Math.pow(2, 31) - 1) * PAYLOAD_SIZE) {
+      String error = "File is too large to send!";
+      socket.send(assembler.createPacket(error.getBytes(), 0, assembler.setFlags(ERROR)));
+      throw new FileException(error);
+
+    } else {
+      socket.send(assembler.createPacket(assembler.getFileSizeByteArray(fileSize), 0,
+          assembler.setFlags(Set.of(ACK, SEND))));
+      String outputPath = receiveFile(fileName, fileSize);
+      System.out.println(
+          "File received and stored at: " + outputPath);
+    }
+  }
+
+  public void serverHandleRetrieve(DatagramPacket packet)
+      throws IOException, FileException {
+    String fileName = decoder.getFileName(packet);
+    System.out.println("Request from: " + address.toString() + " to retrieve file: " + fileName);
+    if (!fileHandler.fileExists(fileName)) {
+      String error = "File does not exist or is not in this directory";
+      socket.send(
+          assembler.createPacket(error.getBytes(), 0, assembler.setFlags(ERROR)));
+      throw new FileException(error);
+
+    } else {
+      long fileSize = fileHandler.getFileSize(fileName);
+      socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),
+          assembler.setFlags(Set.of(ACK, RETRIEVE))));
+      sendFile(fileHandler.getFileStoragePath(fileName), fileSize);
+      System.out.println("File sent successfully");
+    }
+  }
+
+  public void setAddressAndPort(InetAddress address, int port) {
+    this.address = address;
+    this.port = port;
+  }
+
+  public InetAddress getAddress() {
+    return this.address;
+  }
+
+  public int getPort() {
+    return this.port;
+  }
+
 }
