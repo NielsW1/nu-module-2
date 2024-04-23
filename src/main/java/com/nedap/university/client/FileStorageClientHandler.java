@@ -1,5 +1,6 @@
 package com.nedap.university.client;
 
+import com.nedap.university.protocol.FileStorageHeaderFlags;
 import com.nedap.university.service.FileStorageServiceHandler;
 import com.nedap.university.service.exceptions.FileException;
 import java.io.IOException;
@@ -9,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static com.nedap.university.protocol.FileStorageHeaderFlags.DELETE;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.LIST;
 import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
 import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
 
@@ -22,29 +25,29 @@ public class FileStorageClientHandler {
     serviceHandler.setAddressAndPort(InetAddress.getByName(address), port);
   }
 
-  public void sendFile(String pathToFile) throws IOException, FileException {
+  public void sendReplaceFile(String pathToFile, FileStorageHeaderFlags flag) throws IOException, FileException {
     Path filePath = Paths.get(pathToFile);
     if (Files.notExists(filePath)) {
       throw new FileException();
     }
-    long fileSize = serviceHandler.clientHandshake(pathToFile, SEND);
-    System.out.println("Handshake successful, Sending file...");
-    serviceHandler.sendFile(filePath, fileSize);
-    System.out.println("File sent successfully");
+    long fileSize = serviceHandler.clientRequest(pathToFile, flag);
+    serviceHandler.sendFile(filePath, fileSize, true);
   }
 
-  public void retrieveFile(String fileName) throws IOException {
-    long fileSize = serviceHandler.clientHandshake(fileName, RETRIEVE);
-    System.out.println("Handshake successful, retrieving file...");
-    String outputPath = serviceHandler.receiveFile(fileName, fileSize);
-    System.out.println("File downloaded to " + outputPath);
+  public void retrieveFile(String fileName) throws IOException, FileException {
+    long fileSize = serviceHandler.clientRequest(fileName, RETRIEVE);
+    serviceHandler.receiveFile(fileName, fileSize, true);
+  }
+
+  public void deleteFile(String fileName) throws IOException, FileException {
+    serviceHandler.clientRequest(fileName, DELETE);
+  }
+
+  public void listOfFiles() throws IOException, FileException {
+    serviceHandler.clientRequest("", LIST);
   }
 
   public void closeSocket() {
     socket.close();
-  }
-
-  public DatagramSocket getSocket() {
-    return socket;
   }
 }

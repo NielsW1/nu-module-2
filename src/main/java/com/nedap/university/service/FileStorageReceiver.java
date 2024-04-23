@@ -3,9 +3,10 @@ package com.nedap.university.service;
 import static com.nedap.university.protocol.FileStorageHeaderFlags.ACK;
 import static com.nedap.university.protocol.FileStorageHeaderFlags.FINAL;
 import static com.nedap.university.protocol.FileStorageHeaderFlags.NACK;
-import static com.nedap.university.service.FileStorageServiceHandler.PAYLOAD_SIZE;
 import static com.nedap.university.service.FileStorageServiceHandler.PACKET_SIZE;
+import static com.nedap.university.service.FileStorageServiceHandler.PAYLOAD_SIZE;
 import static com.nedap.university.service.FileStorageServiceHandler.WINDOW_SIZE;
+
 import com.nedap.university.protocol.FileStoragePacketAssembler;
 import com.nedap.university.protocol.FileStoragePacketDecoder;
 import java.io.IOException;
@@ -19,13 +20,14 @@ import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Timer;
-import java.util.concurrent.TimeUnit;
 
 public class FileStorageReceiver {
+
   private final FileStoragePacketAssembler assembler;
   private final FileStoragePacketDecoder decoder;
 
-  public FileStorageReceiver(FileStoragePacketAssembler assembler, FileStoragePacketDecoder decoder) {
+  public FileStorageReceiver(FileStoragePacketAssembler assembler,
+      FileStoragePacketDecoder decoder) {
     this.assembler = assembler;
     this.decoder = decoder;
   }
@@ -36,10 +38,10 @@ public class FileStorageReceiver {
    * LFR: Last Frame Received
    * LAF: Largest Accepted Frame
    * NEF: Next Expected Frame
-   * @throws IOException
    */
 
-  public void receiveFile(DatagramSocket socket, Path filePath, long fileSize) throws IOException {
+  public void receiveFile(DatagramSocket socket, Path filePath, long fileSize, boolean print)
+      throws IOException {
     SeekableByteChannel byteChannel = Files.newByteChannel(filePath,
         Set.of(StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE));
     HashMap<Integer, DatagramPacket> receiveWindow = new HashMap<>();
@@ -53,6 +55,8 @@ public class FileStorageReceiver {
     while (!finalPacket) {
       int LAF = LFR + WINDOW_SIZE;
       int NEF = LFR + 1;
+
+      socket.setSoTimeout(30000);
       DatagramPacket packet = assembler.createBufferPacket(PACKET_SIZE);
       socket.receive(packet);
 
@@ -77,7 +81,10 @@ public class FileStorageReceiver {
             receiveWindow.remove(i);
             LFR = i;
 
-            FileStorageProgressBar.updateProgressBar(i, numOfPackets, startTime);
+            if (print) {
+              FileStorageProgressBar.updateProgressBar(i, numOfPackets, startTime);
+            }
+
           } else {
             break;
           }
@@ -93,6 +100,7 @@ public class FileStorageReceiver {
       }
     }
     System.out.println();
+    socket.setSoTimeout(0);
     byteChannel.close();
   }
 }

@@ -1,18 +1,12 @@
 package com.nedap.university.service;
 
-import com.nedap.university.service.exceptions.FileException;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FileStorageFileHandler {
   private final String fileStoragePath;
@@ -45,6 +39,30 @@ public class FileStorageFileHandler {
 
   public long getFileSize(String fileName) throws IOException {
     return Files.size(getFileStoragePath(fileName));
+  }
+
+  public Path deleteFile(String fileName) throws IOException {
+    Path fileToDelete = getFileStoragePath(fileName);
+    Files.deleteIfExists(fileToDelete);
+    return fileToDelete;
+  }
+
+  public byte[] getFilesInDirectory() throws IOException {
+    StringBuilder fileString = new StringBuilder();
+    for (String file: getFileNames()) {
+      fileString.append(file).append(",");
+    }
+    return fileString.toString().getBytes();
+  }
+
+  public Set<String> getFileNames() throws IOException{
+    try (Stream<Path> stream = Files.list(Paths.get(fileStoragePath))) {
+      return stream
+          .filter(file -> !Files.isDirectory(file))
+          .map(Path::getFileName)
+          .map(Path::toString)
+          .collect(Collectors.toSet());
+    }
   }
 
 }

@@ -46,7 +46,8 @@ public class FileStoragePacketAssembler {
     packetWithHeader[3] = (byte) (sequenceNumber & 0xff);
     packetWithHeader[4] = (byte) (payloadSize >> 8 & 0xff);
     packetWithHeader[5] = (byte) (payloadSize & 0xff);
-    packetWithHeader[6] = (byte) flags;
+    packetWithHeader[6] = (byte) (flags >> 8 & 0xff);
+    packetWithHeader[7] = (byte) (flags & 0xff);
     System.arraycopy(packet, 0, packetWithHeader, HEADER_SIZE, packet.length);
 
     return addChecksum(packetWithHeader);
@@ -73,13 +74,14 @@ public class FileStoragePacketAssembler {
 
     for (FileStorageHeaderFlags flag : flags) {
       switch (flag) {
-        case REMOVE -> flagByte |= 1 << 7;
-        case LIST -> flagByte |= 1 << 6;
-        case ERROR -> flagByte |= 1 << 5;
-        case FINAL -> flagByte |= 1 << 4;
-        case NACK -> flagByte |= 1 << 3;
-        case ACK -> flagByte |= 1 << 2;
-        case RETRIEVE -> flagByte |= 1 << 1;
+        case ERROR -> flagByte |= 1 << 8;
+        case FINAL -> flagByte |= 1 << 7;
+        case NACK -> flagByte |= 1 << 6;
+        case ACK -> flagByte |= 1 << 5;
+        case LIST -> flagByte |= 1 << 4;
+        case DELETE -> flagByte |= 1 << 3;
+        case RETRIEVE -> flagByte |= 1 << 2;
+        case REPLACE -> flagByte |= 1 << 1;
         case SEND -> flagByte |= 1;
       }
     }

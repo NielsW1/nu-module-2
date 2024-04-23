@@ -1,10 +1,14 @@
 package com.nedap.university.protocol;
 
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ERROR;
 import static com.nedap.university.service.FileStorageServiceHandler.HEADER_SIZE;
 
 import java.net.DatagramPacket;
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.zip.CRC32;
+import javax.xml.crypto.Data;
 
 public class FileStoragePacketDecoder {
 
@@ -69,23 +73,43 @@ public class FileStoragePacketDecoder {
   public byte[] getPacketWithoutChecksum(DatagramPacket packet) {
     byte[] packetWithoutChecksum = new byte[HEADER_SIZE + getPayloadSize(packet)];
     byte[] payload = getPayload(packet);
-    System.arraycopy(packet.getData(), 0, packetWithoutChecksum, 0, HEADER_SIZE - 5);
+    System.arraycopy(packet.getData(), 0, packetWithoutChecksum, 0, HEADER_SIZE - 4);
     System.arraycopy(payload, 0, packetWithoutChecksum, HEADER_SIZE, payload.length);
 
     return packetWithoutChecksum;
   }
 
+  public boolean hasFlags(DatagramPacket packet, Set<FileStorageHeaderFlags> flags) {
+    for (FileStorageHeaderFlags flag : flags) {
+      if (hasFlag(packet, flag)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public boolean hasFlag(DatagramPacket packet, FileStorageHeaderFlags flag) {
-    int flags = packet.getData()[6];
+    int flags = (packet.getData()[6] & 0xff) << 8;
+    flags |= packet.getData()[7] & 0xff;
     return switch (flag) {
-      case REMOVE -> (flags >>> 7 & 1) == 1;
-      case LIST -> (flags >>> 6 & 1) == 1;
-      case ERROR -> (flags >>> 5 & 1) == 1;
-      case FINAL -> (flags >>> 4 & 1) == 1;
-      case NACK -> (flags >>> 3 & 1) == 1;
-      case ACK -> (flags >>> 2 & 1) == 1;
-      case RETRIEVE -> (flags >>> 1 & 1) == 1;
+      case ERROR -> (flags >>> 8 & 1) == 1;
+      case FINAL -> (flags >>> 7 & 1) == 1;
+      case NACK -> (flags >>> 6 & 1) == 1;
+      case ACK -> (flags >>> 5 & 1) == 1;
+      case LIST -> (flags >>> 4 & 1) == 1;
+      case DELETE -> (flags >>> 3 & 1) == 1;
+      case RETRIEVE -> (flags >>> 2 & 1) == 1;
+      case REPLACE -> (flags >>> 1 & 1) == 1;
       case SEND -> (flags & 1) == 1;
     };
+  }
+
+  public FileStorageHeaderFlags getFlag(DatagramPacket packet) {
+    for (FileStorageHeaderFlags flag : EnumSet.allOf(FileStorageHeaderFlags.class)) {
+      if (hasFlag(packet, flag)) {
+        return flag;
+      }
+    }
+    return ERROR;
   }
 }

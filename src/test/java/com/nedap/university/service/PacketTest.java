@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static com.nedap.university.protocol.FileStorageHeaderFlags.ERROR;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.REPLACE;
 import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
 import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -55,15 +56,16 @@ public class PacketTest {
   @Test
   public void assemblerDecoderTest() {
     byte[] payload = "Ash nazg durbatuluk, ash nazg gimbatul, ash nazg thrakatuluk, agh burzum ishi krimpatul".getBytes();
-    DatagramPacket packet = assembler.createPacket(payload, 1337, assembler.setFlags(Set.of(FINAL, ACK)));
+    DatagramPacket packet = assembler.createPacket(payload, 1337, assembler.setFlags(Set.of(FINAL, ACK, ERROR, REPLACE)));
     assertArrayEquals(payload, decoder.getPayload(packet));
     assertEquals(payload.length, decoder.getPayloadSize(packet));
     assertEquals(1337, decoder.getSequenceNumber(packet));
     assertTrue(decoder.hasFlag(packet, FINAL));
     assertTrue(decoder.hasFlag(packet, ACK));
+    assertTrue(decoder.hasFlag(packet, ERROR));
+    assertTrue(decoder.hasFlag(packet, REPLACE));
     assertFalse(decoder.hasFlag(packet, SEND));
     assertFalse(decoder.hasFlag(packet, RETRIEVE));
-    assertFalse(decoder.hasFlag(packet, ERROR));
     assertTrue(decoder.verifyChecksum(packet));
   }
 
@@ -90,9 +92,9 @@ public class PacketTest {
   @Test
   public void setFlagsTest() {
     int flags = assembler.setFlags(Set.of(FINAL, ACK, SEND));
-    assertEquals(21, flags);
+    assertEquals(161, flags);
     flags = assembler.setFlags(Set.of(FINAL, SEND));
-    assertEquals(17, flags);
+    assertEquals(129, flags);
     flags = assembler.setFlags(new HashSet<>());
     assertEquals(0, flags);
   }

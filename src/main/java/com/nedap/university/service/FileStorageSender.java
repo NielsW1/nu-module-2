@@ -31,10 +31,10 @@ public class FileStorageSender {
   /**
    * Reads a file using a SeekableByteChannel and creates DatagramPackets to send.
    * LAR: Last Acknowledgement Received
-   * @throws IOException
    */
 
-  public void sendFile(DatagramSocket socket, Path filePath, long fileSize) throws IOException {
+  public void sendFile(DatagramSocket socket, Path filePath, long fileSize, boolean print)
+      throws IOException {
     int bytesRead;
     int sequenceNumber = 1;
     int LAR = 0;
@@ -63,13 +63,18 @@ public class FileStorageSender {
       sendWindow.put(sequenceNumber, packet);
       packetBuffer.clear();
 
-      FileStorageProgressBar.updateProgressBar(sequenceNumber++, numOfPackets, startTime);
+      if (print) {
+        FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets, startTime);
+      }
+      sequenceNumber++;
 
       //if sendWindow is full or all packets have been sent, receive acknowledgements and
       //remove them from the sendWindow
       while (sendWindow.size() >= WINDOW_SIZE || (finalPacketSent && !sendWindow.isEmpty())) {
+        socket.setSoTimeout(30000);
         DatagramPacket ackPacket = assembler.createBufferPacket(HEADER_SIZE);
         socket.receive(ackPacket);
+
         int ackNumber = decoder.getSequenceNumber(ackPacket);
         if (decoder.hasFlag(ackPacket, NACK)) {
           socket.send(sendWindow.get(ackNumber));
@@ -86,5 +91,6 @@ public class FileStorageSender {
       }
     }
     System.out.println();
+    socket.setSoTimeout(0);
   }
 }
