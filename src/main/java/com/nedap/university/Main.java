@@ -16,9 +16,9 @@ public class Main {
     try {
       server = new FileStorageServer();
     } catch (SocketException e) {
-      System.out.println("Socket error: " + e.getMessage());
+      e.printStackTrace();
     } catch (IOException e) {
-      System.out.println("I/O error: " + e.getMessage());
+      e.printStackTrace();
     }
     running = true;
     System.out.println("Running service...");
@@ -31,9 +31,10 @@ public class Main {
         server.handleRequest();
         Thread.sleep(1000);
       } catch (InterruptedException e) {
+        e.printStackTrace();
         Thread.currentThread().interrupt();
       } catch (IOException e) {
-        System.out.println("I/O error: " + e.getMessage());
+        e.printStackTrace();
       }
     }
     server.closeSocket();

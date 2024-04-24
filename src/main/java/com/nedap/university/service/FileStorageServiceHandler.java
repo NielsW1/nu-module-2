@@ -3,6 +3,7 @@ package com.nedap.university.service;
 import com.nedap.university.protocol.FileStorageHeaderFlags;
 import com.nedap.university.protocol.FileStoragePacketAssembler;
 import com.nedap.university.protocol.FileStoragePacketDecoder;
+import com.nedap.university.server.FileStorageServerLogger;
 import com.nedap.university.service.exceptions.FileException;
 import com.nedap.university.service.exceptions.RequestException;
 import java.io.IOException;
@@ -37,6 +38,7 @@ public class FileStorageServiceHandler {
   private final FileStorageFileHandler fileHandler;
   private final FileStorageSender sender;
   private final FileStorageReceiver receiver;
+  private FileStorageServerLogger serverLogger;
   private final DatagramSocket socket;
   private InetAddress address;
   private int port;
@@ -50,29 +52,35 @@ public class FileStorageServiceHandler {
     this.socket = socket;
   }
 
-  public void sendFile(Path filePath, long fileSize, boolean print) throws IOException {
-    System.out.println("Sending " + fileSize + " bytes...");
-    sender.sendFile(socket, filePath, fileSize, print);
-    System.out.println("File sent successfully!");
+  public FileStorageServiceHandler(DatagramSocket socket, String fileStoragePath,
+      FileStorageServerLogger serverLogger) throws IOException {
+    this(socket, fileStoragePath);
+    this.serverLogger = serverLogger;
   }
 
-  public void replaceFile(String fileName, long fileSize, boolean print) throws IOException {
-    System.out.println("Receiving " + fileSize + " bytes...");
+  public void sendFile(Path filePath, long fileSize, boolean log) throws IOException {
+    logMessage("Sending " + fileSize + " bytes...", false);
+    sender.sendFile(socket, filePath, fileSize, log);
+    logMessage("File sent successfully: " + filePath, log);
+  }
+
+  public void replaceFile(String fileName, long fileSize, boolean log) throws IOException {
+    logMessage("Receiving " + fileSize + " bytes...", false);
     Path filePath = fileHandler.getFileStoragePath(fileName);
-    receiver.receiveFile(socket, filePath, fileSize, print);
-    System.out.println("File received and replaced: " + filePath.toString());
+    receiver.receiveFile(socket, filePath, fileSize, log);
+    logMessage("File received and replaced: " + filePath.toString(), log);
   }
 
-  public void receiveFile(String fileName, long fileSize, boolean print) throws IOException {
-    System.out.println("Receiving " + fileSize + " bytes...");
+  public void receiveFile(String fileName, long fileSize, boolean log) throws IOException {
+    logMessage("Receiving " + fileSize + " bytes...", false);
     Path filePath = fileHandler.updateFileName(fileName);
-    receiver.receiveFile(socket, filePath, fileSize, print);
-    System.out.println("File received and stored at: " + filePath.toString());
+    receiver.receiveFile(socket, filePath, fileSize, log);
+    logMessage("File received and stored at: " + filePath.toString(), log);
   }
 
   public void deleteFile(String fileName) throws IOException {
     Path deletedFile = fileHandler.deleteFile(fileName);
-    System.out.println("File deleted: " + deletedFile.toString());
+    logMessage("File deleted: " + deletedFile.toString(), true);
   }
 
   public void sendFileList() throws IOException {
@@ -95,10 +103,10 @@ public class FileStorageServiceHandler {
 
   public void receiveFileList(List<DatagramPacket> packetList) {
     StringBuilder fileList = new StringBuilder();
-    for (DatagramPacket packet: packetList) {
+    for (DatagramPacket packet : packetList) {
       fileList.append(new String(decoder.getPayload(packet)));
     }
-    for (String fileName: fileList.toString().split(",")) {
+    for (String fileName : fileList.toString().split(",")) {
       System.out.println(fileName);
     }
   }
@@ -127,7 +135,7 @@ public class FileStorageServiceHandler {
     }
 
     while (true) {
-      socket.setSoTimeout(30000);
+      socket.setSoTimeout(10000);
       DatagramPacket receivedPacket = assembler.createBufferPacket(PACKET_SIZE);
       socket.receive(receivedPacket);
 
@@ -141,7 +149,7 @@ public class FileStorageServiceHandler {
         fileSize = decoder.getFileSize(receivedPacket);
         break;
       } else if (decoder.hasFlag(receivedPacket, DELETE)) {
-        System.out.println("File successfully deleted: " + decoder.getFileName(receivedPacket));
+        logMessage("File successfully deleted: " + decoder.getFileName(receivedPacket), false);
         break;
       } else if (decoder.hasFlag(receivedPacket, LIST)) {
         List<DatagramPacket> packetList = new ArrayList<>();
@@ -169,14 +177,15 @@ public class FileStorageServiceHandler {
       fileSize = decoder.getFileSize(requestPacket);
     }
 
-    System.out.println("Request from: " + address.toString() + " " + flag + " " + fileName);
+    logMessage(String.format("Request from: %s:%d %s %s", address.toString(), port, flag, fileName),
+        true);
 
     switch (flag) {
       case SEND:
         fileTooLarge(fileSize);
         socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),
-                assembler.setFlags(Set.of(SEND, ACK))));
-        receiveFile(fileName, fileSize, false);
+            assembler.setFlags(Set.of(SEND, ACK))));
+        receiveFile(fileName, fileSize, true);
         break;
 
       case REPLACE:
@@ -184,7 +193,7 @@ public class FileStorageServiceHandler {
         fileTooLarge(fileSize);
         socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),
             assembler.setFlags(Set.of(REPLACE, ACK))));
-        replaceFile(fileName, fileSize, false);
+        replaceFile(fileName, fileSize, true);
         break;
 
       case RETRIEVE:
@@ -192,7 +201,7 @@ public class FileStorageServiceHandler {
         fileSize = fileHandler.getFileSize(fileName);
         socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),
             assembler.setFlags(Set.of(RETRIEVE, ACK))));
-        sendFile(fileHandler.getFileStoragePath(fileName), fileSize, false);
+        sendFile(fileHandler.getFileStoragePath(fileName), fileSize, true);
         break;
 
       case DELETE:
@@ -217,7 +226,7 @@ public class FileStorageServiceHandler {
 
   public void fileExists(String fileName) throws FileException {
     if (!fileHandler.fileExists(fileName)) {
-      throw new FileException();
+      throw new FileException("File '" + fileName + "' does not exist or is not in this directory");
     }
   }
 
@@ -225,6 +234,13 @@ public class FileStorageServiceHandler {
     if (fileSize > (Math.pow(2, 31) - 1) * PAYLOAD_SIZE) {
       throw new FileException("File is too large to send!");
     }
+  }
+
+  public void logMessage(String message, boolean log) throws IOException {
+    if (serverLogger != null && log) {
+      serverLogger.writeToLog(message);
+    }
+    System.out.println(message);
   }
 
   public void setAddressAndPort(InetAddress address, int port) {

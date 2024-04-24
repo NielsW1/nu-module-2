@@ -28,15 +28,15 @@ public class FileStorageClientHandler {
   public void sendReplaceFile(String pathToFile, FileStorageHeaderFlags flag) throws IOException, FileException {
     Path filePath = Paths.get(pathToFile);
     if (Files.notExists(filePath)) {
-      throw new FileException();
+      throw new FileException("File '" + pathToFile + "' does not exist or is not in this directory");
     }
     long fileSize = serviceHandler.clientRequest(pathToFile, flag);
-    serviceHandler.sendFile(filePath, fileSize, true);
+    serviceHandler.sendFile(filePath, fileSize, false);
   }
 
   public void retrieveFile(String fileName) throws IOException, FileException {
     long fileSize = serviceHandler.clientRequest(fileName, RETRIEVE);
-    serviceHandler.receiveFile(fileName, fileSize, true);
+    serviceHandler.receiveFile(fileName, fileSize, false);
   }
 
   public void deleteFile(String fileName) throws IOException, FileException {

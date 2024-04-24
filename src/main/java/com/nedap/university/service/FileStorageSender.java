@@ -11,6 +11,7 @@ import com.nedap.university.protocol.FileStoragePacketDecoder;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
@@ -29,16 +30,17 @@ public class FileStorageSender {
   }
 
   /**
-   * Reads a file using a SeekableByteChannel and creates DatagramPackets to send.
-   * LAR: Last Acknowledgement Received
+   * Reads a file using a SeekableByteChannel and creates DatagramPackets to send. LAR: Last
+   * Acknowledgement Received
    */
 
-  public void sendFile(DatagramSocket socket, Path filePath, long fileSize, boolean print)
+  public void sendFile(DatagramSocket socket, Path filePath, long fileSize, boolean log)
       throws IOException {
     int bytesRead;
     int sequenceNumber = 1;
     int LAR = 0;
     int numOfPackets = (int) (fileSize / PAYLOAD_SIZE) + 1;
+    int retransmits = 0;
     boolean finalPacketSent = false;
     long startTime = System.currentTimeMillis();
     SeekableByteChannel byteChannel = Files.newByteChannel(filePath, StandardOpenOption.READ);
@@ -61,32 +63,42 @@ public class FileStorageSender {
       }
       socket.send(packet);
       sendWindow.put(sequenceNumber, packet);
+//      System.out.println("Sent: " + sequenceNumber);
       packetBuffer.clear();
 
-      if (print) {
-        FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets, startTime);
+      if (!log) {
+        FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets, startTime, retransmits);
       }
       sequenceNumber++;
 
       //if sendWindow is full or all packets have been sent, receive acknowledgements and
       //remove them from the sendWindow
       while (sendWindow.size() >= WINDOW_SIZE || (finalPacketSent && !sendWindow.isEmpty())) {
-        socket.setSoTimeout(30000);
-        DatagramPacket ackPacket = assembler.createBufferPacket(HEADER_SIZE);
-        socket.receive(ackPacket);
+        socket.setSoTimeout(10000);
+        try {
+          DatagramPacket ackPacket = assembler.createBufferPacket(HEADER_SIZE);
+          socket.receive(ackPacket);
 
-        int ackNumber = decoder.getSequenceNumber(ackPacket);
-        if (decoder.hasFlag(ackPacket, NACK)) {
-          socket.send(sendWindow.get(ackNumber));
-        } else {
-          for (int i = LAR + 1; i <= ackNumber; i++) {
-            if (sendWindow.containsKey(i)) {
-              sendWindow.remove(i);
-              LAR = i;
-            } else {
-              break;
+          int ackNumber = decoder.getSequenceNumber(ackPacket);
+          if (decoder.hasFlag(ackPacket, NACK) && sendWindow.containsKey(ackNumber)) {
+            socket.send(sendWindow.get(ackNumber));
+            retransmits++;
+//            System.out.println("Retransmitting: " + ackNumber);
+          } else {
+//            System.out.println("Ack received: " + ackNumber);
+            for (int i = LAR + 1; i <= ackNumber; i++) {
+              if (sendWindow.containsKey(i)) {
+                sendWindow.remove(i);
+                LAR = i;
+              } else {
+                break;
+              }
             }
           }
+        } catch (SocketTimeoutException e) {
+          socket.setSoTimeout(0);
+          System.out.println();
+          throw new IOException("Receive timed out");
         }
       }
     }

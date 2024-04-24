@@ -78,8 +78,15 @@ public class FileStorageClient {
 
               case 4:
                 System.out.println("Enter the name of the file you want to delete:");
+                String fileName;
                 if (input.hasNextLine()) {
-                  clientHandler.deleteFile(input.nextLine());
+                  fileName = input.nextLine();
+                  System.out.println("Are you sure you want to delete: " + fileName + "? (y/n)");
+                  if (input.hasNextLine()) {
+                    if (input.nextLine().contains("y")) {
+                      clientHandler.deleteFile(fileName);
+                    }
+                  }
                 }
                 break;
 
@@ -92,7 +99,7 @@ public class FileStorageClient {
                 System.out.println("Invalid input: " + command);
                 continue;
             }
-          } catch (FileException e) {
+          } catch (FileException | IOException e) {
             System.out.println("I/O error: " + e.getMessage() + "\n");
             continue;
           }

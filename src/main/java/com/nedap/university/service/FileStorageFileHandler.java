@@ -23,8 +23,12 @@ public class FileStorageFileHandler {
   public Path updateFileName(String fileName) {
     int fileNum = 1;
     while (Files.exists(Paths.get(fileStoragePath + "/" + fileName))) {
-      String[] splitFileName = fileName.split("[.]|(\\([0-9]+\\))");
-      fileName = splitFileName[0] + "(" + fileNum++ + ")." + splitFileName[splitFileName.length - 1];
+      String[] splitFileName = fileName.split("(\\([0-9]+\\)[.])");
+      if (splitFileName.length < 2) {
+        int dot = fileName.lastIndexOf(".");
+        splitFileName = new String[] {fileName.substring(0, dot), fileName.substring(dot + 1)};
+      }
+      fileName = splitFileName[0] + "(" + fileNum++ + ")." + splitFileName[1];
     }
     return Paths.get((fileStoragePath + "/" + fileName));
   }
@@ -55,7 +59,7 @@ public class FileStorageFileHandler {
     return fileString.toString().getBytes();
   }
 
-  public Set<String> getFileNames() throws IOException{
+  private Set<String> getFileNames() throws IOException{
     try (Stream<Path> stream = Files.list(Paths.get(fileStoragePath))) {
       return stream
           .filter(file -> !Files.isDirectory(file))

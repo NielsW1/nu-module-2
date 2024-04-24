@@ -32,7 +32,7 @@ public class FileTransferTest {
   public void setup() {
     try {
       client = new FileStorageClientHandler(HOSTNAME, 8080);
-      server = new FileStorageServer(resources);
+      server = new FileStorageServer(resources, resources);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -52,7 +52,7 @@ public class FileTransferTest {
   }
 
   @Test
-  public void testSendRetrieveFile() {
+  public void testSendRetrieveFile() throws IOException{
     try {
       runServerHelper();
       Path oriPath = Paths.get(file);
@@ -83,9 +83,9 @@ public class FileTransferTest {
       Path deletePath = Paths.get(resources + "/large.pdf");
       assertTrue(Files.exists(deletePath));
       client.deleteFile("large.pdf");
-      assertTrue(Files.notExists(deletePath));
+      assertFalse(Files.exists(deletePath));
 
-    } catch (IOException | FileException e) {
+    } catch (FileException e) {
       e.printStackTrace();
     }
   }

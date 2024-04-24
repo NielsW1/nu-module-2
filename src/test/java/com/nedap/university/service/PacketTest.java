@@ -56,7 +56,8 @@ public class PacketTest {
   @Test
   public void assemblerDecoderTest() {
     byte[] payload = "Ash nazg durbatuluk, ash nazg gimbatul, ash nazg thrakatuluk, agh burzum ishi krimpatul".getBytes();
-    DatagramPacket packet = assembler.createPacket(payload, 1337, assembler.setFlags(Set.of(FINAL, ACK, ERROR, REPLACE)));
+    DatagramPacket packet = assembler.createPacket(payload, 1337,
+        assembler.setFlags(Set.of(FINAL, ACK, ERROR, REPLACE)));
     assertArrayEquals(payload, decoder.getPayload(packet));
     assertEquals(payload.length, decoder.getPayloadSize(packet));
     assertEquals(1337, decoder.getSequenceNumber(packet));
@@ -84,6 +85,7 @@ public class PacketTest {
       DatagramPacket packet = assembler.createRequestPacket(fileSize, "large.pdf".getBytes(), assembler.setFlags(SEND));
       assertEquals("large.pdf", decoder.getFileName(packet));
       assertEquals(fileSize, decoder.getFileSize(packet));
+      assertTrue(decoder.hasFlag(packet, SEND));
     } catch (IOException e) {
       e.printStackTrace();
     }
