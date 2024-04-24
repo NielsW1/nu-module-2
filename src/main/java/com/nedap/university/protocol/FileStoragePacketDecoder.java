@@ -56,7 +56,7 @@ public class FileStoragePacketDecoder {
   public boolean verifyChecksum(DatagramPacket packet) {
     CRC32 checksum = new CRC32();
     long receivedChecksum = getChecksum(packet);
-    checksum.update(getPacketWithoutChecksum(packet.getData()));
+    checksum.update(getPacketWithoutChecksum(packet));
 
     return receivedChecksum == checksum.getValue();
   }
@@ -71,11 +71,13 @@ public class FileStoragePacketDecoder {
     return checksum;
   }
 
-  public byte[] getPacketWithoutChecksum(byte[] packet) {
-    for (int i = HEADER_SIZE - 4; i < HEADER_SIZE; i++) {
-      packet[i] = 0;
-    }
-    return packet;
+  public byte[] getPacketWithoutChecksum(DatagramPacket packet) {
+    byte[] packetWithoutChecksum = new byte[HEADER_SIZE + getPayloadSize(packet)];
+    byte[] payload = getPayload(packet);
+    System.arraycopy(packet.getData(), 0, packetWithoutChecksum, 0, HEADER_SIZE - 4);
+    System.arraycopy(payload, 0, packetWithoutChecksum, HEADER_SIZE, payload.length);
+
+    return packetWithoutChecksum;
   }
 
   public boolean hasFlags(DatagramPacket packet, Set<FileStorageHeaderFlags> flags) {
