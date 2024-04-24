@@ -47,7 +47,7 @@ public class FileStorageReceiver {
       throws IOException {
     SeekableByteChannel byteChannel = Files.newByteChannel(filePath,
         Set.of(StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE));
-    SortedMap<Integer, DatagramPacket> receiveWindow = new TreeMap<>();
+    HashMap<Integer, DatagramPacket> receiveWindow = new HashMap<>();
     int LFR = 0;
     int timeOutCounter = 0;
     boolean finalPacket = false;
@@ -106,7 +106,6 @@ public class FileStorageReceiver {
         } else if (sequenceNumber > NEF && sequenceNumber <= LAF) {
           receiveWindow.put(sequenceNumber, packet);
           if (timeout == null) {
-            retransmits++;
             timeout = new FileStorageTimeOut(socket, assembler.createAckPacket(NEF, NACK));
             timer.scheduleAtFixedRate(timeout, 0, 1000);
           }

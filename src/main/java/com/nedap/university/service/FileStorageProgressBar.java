@@ -13,7 +13,7 @@ public class FileStorageProgressBar {
     long timeElapsed = (System.currentTimeMillis() - startTime) / 1000;
     float downloadSpeed = timeElapsed == 0 ? 0
         : (float) (((long) sequenceNumber * PAYLOAD_SIZE) / timeElapsed) / 1000;
-    float packetLoss = (float) (retransmits / numOfPackets * 100);
+    float packetLoss = (float) retransmits / numOfPackets * 100;
     String progressBar = "\r"
         + String.format("%d%% [", percentage)
         + String.join("", Collections.nCopies(percentage, "■"))
@@ -22,7 +22,7 @@ public class FileStorageProgressBar {
         String.format("] %.2f KB/sec", downloadSpeed))
         + String.format(" %02d:%02d:%02d", timeElapsed / 3600, timeElapsed % 3600 / 60,
         timeElapsed % 3600 % 60)
-        + String.format(" PL: %.3f%%", packetLoss);
+        + String.format(" Loss: %.2f%%", packetLoss);
     System.out.print(progressBar);
   }
 }
