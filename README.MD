@@ -9,12 +9,12 @@
 ### Using the client
 
 The client has six commands available, use them by entering the corresponding number (1-6)
-- 1 ...<SEND>..... Send a file to the Pi
-- 2 ...<REPLACE>.. Send and replace a file on the Pi
-- 3 ...<RETRIEVE>. Retrieve a file from the Pi
-- 4 ...<DELETE>... Delete a file from the Pi
-- 5 ...<LIST>..... Receive a list of all files currently stored on the Pi
-- 6 ...<EXIT>..... Exit the client
+- 1 ...`<SEND>`..... Send a file to the Pi
+- 2 ...`<REPLACE>`.. Send and replace a file on the Pi
+- 3 ...`<RETRIEVE>`. Retrieve a file from the Pi
+- 4 ...`<DELETE>`... Delete a file from the Pi
+- 5 ...`<LIST>`..... Receive a list of all files currently stored on the Pi
+- 6 ...`<EXIT>`..... Exit the client
 
 ### Using the server
 
