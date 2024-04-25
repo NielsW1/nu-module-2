@@ -20,4 +20,4 @@ The client has six commands available, use them by entering the corresponding nu
 
 After receiving the first send request, the Pi will create a new directory under `/home/pi` called
 `FileStorage`. All subsequent files sent will be stored in this directory. A subdirectory is created
-here called ServerLog, containing a `.txt` file containing all previous interactions with clients.
+here called ServerLog, containing a `.txt` file with all previous interactions with clients.
