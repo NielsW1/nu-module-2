@@ -25,17 +25,20 @@ public class FileStorageClientHandler {
     serviceHandler.setAddressAndPort(InetAddress.getByName(address), port);
   }
 
-  public void sendReplaceFile(String pathToFile, FileStorageHeaderFlags flag) throws IOException, FileException {
+  public void sendReplaceFile(String pathToFile, FileStorageHeaderFlags flag)
+      throws IOException, FileException, InterruptedException {
     Path filePath = Paths.get(pathToFile);
     if (Files.notExists(filePath)) {
       throw new FileException("File '" + pathToFile + "' does not exist or is not in this directory");
     }
     long fileSize = serviceHandler.clientRequest(pathToFile, flag);
+    Thread.sleep(3000);
     serviceHandler.sendFile(filePath, fileSize, false);
   }
 
-  public void retrieveFile(String fileName) throws IOException, FileException {
+  public void retrieveFile(String fileName) throws IOException, FileException, InterruptedException {
     long fileSize = serviceHandler.clientRequest(fileName, RETRIEVE);
+    Thread.sleep(3000);
     serviceHandler.receiveFile(fileName, fileSize, false);
   }
 

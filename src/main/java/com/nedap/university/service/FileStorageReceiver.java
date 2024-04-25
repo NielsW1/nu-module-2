@@ -20,9 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.Timer;
-import java.util.TreeMap;
 
 public class FileStorageReceiver {
 
@@ -68,7 +66,6 @@ public class FileStorageReceiver {
         timeOutCounter = 0;
 
         int sequenceNumber = decoder.getSequenceNumber(packet);
-//        System.out.println("Received: " + sequenceNumber + " LFR: " + LFR);
         if (!decoder.verifyChecksum(packet)) {
           socket.send(assembler.createAckPacket(sequenceNumber, NACK));
           continue;
@@ -113,9 +110,7 @@ public class FileStorageReceiver {
       } catch (SocketTimeoutException e) {
         socket.send(assembler.createAckPacket(NEF, NACK));
         retransmits++;
-//        System.out.println("Sending Nack " + NEF);
-        timeOutCounter++;
-        if (timeOutCounter > 100) {
+        if (timeOutCounter++ > 100) {
           if (timeout != null) {
             timeout.cancel();
           }

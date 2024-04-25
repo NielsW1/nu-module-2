@@ -6,16 +6,15 @@ import com.nedap.university.service.exceptions.RequestException;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileStorageServer {
+
   public static final int PI_PORT = 8080;
   public static final String PI_HOSTNAME = "172.16.1.1";
 
-  private FileStorageServiceHandler serviceHandler;
-  private FileStorageServerLogger serverLogger;
-  private DatagramSocket socket;
+  private final FileStorageServiceHandler serviceHandler;
+  private final DatagramSocket socket;
 
   public FileStorageServer() throws IOException {
     this("/home/pi/FileStorage", "/home/pi/FileStorage/ServerLog");
@@ -26,14 +25,14 @@ public class FileStorageServer {
       logPath = Files.createDirectories(Paths.get(logPath)).toString();
     }
     socket = new DatagramSocket(PI_PORT);
-    serverLogger = new FileStorageServerLogger(logPath);
+    FileStorageServerLogger serverLogger = new FileStorageServerLogger(logPath);
     serviceHandler = new FileStorageServiceHandler(socket, fileStoragePath, serverLogger);
   }
 
   public void handleRequest() throws IOException {
     try {
       serviceHandler.serverHandleRequest();
-    } catch (FileException | RequestException e) {
+    } catch (IOException | FileException | RequestException e) {
       serviceHandler.sendErrorPacket(e.getMessage());
       serviceHandler.logMessage("File/request error: " + e.getMessage(), true);
     }

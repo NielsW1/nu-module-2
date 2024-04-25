@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.zip.CRC32;
-import javax.xml.crypto.Data;
 
 public class FileStoragePacketDecoder {
 

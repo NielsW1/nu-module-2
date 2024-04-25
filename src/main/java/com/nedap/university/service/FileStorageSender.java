@@ -30,8 +30,10 @@ public class FileStorageSender {
   }
 
   /**
-   * Reads a file using a SeekableByteChannel and creates DatagramPackets to send. LAR: Last
-   * Acknowledgement Received
+   * Reads a file using a SeekableByteChannel and creates DatagramPackets to send.
+   * Once the sendWindow is full, waits for acknowledgements and removes the acknowledged
+   * packets from the sendWindow.
+   * LAR: Last Acknowledgement Received
    */
 
   public void sendFile(DatagramSocket socket, Path filePath, long fileSize, boolean log)
@@ -63,11 +65,11 @@ public class FileStorageSender {
       }
       socket.send(packet);
       sendWindow.put(sequenceNumber, packet);
-//      System.out.println("Sent: " + sequenceNumber);
       packetBuffer.clear();
 
       if (!log) {
-        FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets, startTime, retransmits);
+        FileStorageProgressBar.updateProgressBar(sequenceNumber, numOfPackets, startTime,
+            retransmits);
       }
       sequenceNumber++;
 
@@ -83,9 +85,7 @@ public class FileStorageSender {
           if (decoder.hasFlag(ackPacket, NACK) && sendWindow.containsKey(ackNumber)) {
             socket.send(sendWindow.get(ackNumber));
             retransmits++;
-//            System.out.println("Retransmitting: " + ackNumber);
           } else {
-//            System.out.println("Ack received: " + ackNumber);
             for (int i = LAR + 1; i <= ackNumber; i++) {
               if (sendWindow.containsKey(i)) {
                 sendWindow.remove(i);

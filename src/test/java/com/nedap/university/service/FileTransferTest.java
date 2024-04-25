@@ -2,7 +2,6 @@ package com.nedap.university.service;
 
 import static com.nedap.university.protocol.FileStorageHeaderFlags.REPLACE;
 import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -21,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class FileTransferTest {
+
   private FileStorageServer server;
   private FileStorageClientHandler client;
   private static final String HOSTNAME = "127.0.0.1";
@@ -52,7 +52,7 @@ public class FileTransferTest {
   }
 
   @Test
-  public void testSendRetrieveFile() throws IOException{
+  public void testSendRetrieveFile() throws IOException, InterruptedException {
     try {
       runServerHelper();
       Path oriPath = Paths.get(file);
@@ -63,7 +63,8 @@ public class FileTransferTest {
       assertEquals(-1, Files.mismatch(oriPath, Paths.get(resources + "/large.pdf")));
 
       //test replace file
-      assertThrows(FileException.class, () -> client.sendReplaceFile("DefinitelyNotAFile.pdf", REPLACE));
+      assertThrows(FileException.class,
+          () -> client.sendReplaceFile("DefinitelyNotAFile.pdf", REPLACE));
       client.sendReplaceFile(file, REPLACE);
       assertEquals(-1, Files.mismatch(oriPath, Paths.get(resources + "/large.pdf")));
 

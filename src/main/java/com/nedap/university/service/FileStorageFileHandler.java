@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FileStorageFileHandler {
+
   private final String fileStoragePath;
 
   public FileStorageFileHandler(String fileStoragePath) {
@@ -26,11 +27,11 @@ public class FileStorageFileHandler {
       String[] splitFileName = fileName.split("(\\([0-9]+\\)[.])");
       if (splitFileName.length < 2) {
         int dot = fileName.lastIndexOf(".");
-        splitFileName = new String[] {fileName.substring(0, dot), fileName.substring(dot + 1)};
+        splitFileName = new String[]{fileName.substring(0, dot), fileName.substring(dot + 1)};
       }
       fileName = splitFileName[0] + "(" + fileNum++ + ")." + splitFileName[1];
     }
-    return Paths.get((fileStoragePath + "/" + fileName));
+    return Paths.get(fileStoragePath + "/" + fileName);
   }
 
   public boolean fileExists(String fileName) {
@@ -53,13 +54,13 @@ public class FileStorageFileHandler {
 
   public byte[] getFilesInDirectory() throws IOException {
     StringBuilder fileString = new StringBuilder();
-    for (String file: getFileNames()) {
+    for (String file : getFileNames()) {
       fileString.append(file).append(",");
     }
     return fileString.toString().getBytes();
   }
 
-  private Set<String> getFileNames() throws IOException{
+  private Set<String> getFileNames() throws IOException {
     try (Stream<Path> stream = Files.list(Paths.get(fileStoragePath))) {
       return stream
           .filter(file -> !Files.isDirectory(file))

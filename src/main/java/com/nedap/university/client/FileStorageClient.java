@@ -102,6 +102,8 @@ public class FileStorageClient {
           } catch (FileException | IOException e) {
             System.out.println("I/O error: " + e.getMessage() + "\n");
             continue;
+          } catch (InterruptedException e) {
+            System.out.println("Interrupt error: " + e.getMessage() + "\n");
           }
           System.out.println("Would you like to send/retrieve another file? (y/n)");
           if (input.hasNextLine()) {

@@ -1,5 +1,14 @@
 package com.nedap.university.service;
 
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ACK;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.DELETE;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.ERROR;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.FINAL;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.LIST;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.REPLACE;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
+import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
+
 import com.nedap.university.protocol.FileStorageHeaderFlags;
 import com.nedap.university.protocol.FileStoragePacketAssembler;
 import com.nedap.university.protocol.FileStoragePacketDecoder;
@@ -10,21 +19,13 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import static com.nedap.university.protocol.FileStorageHeaderFlags.DELETE;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.ERROR;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.ACK;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.FINAL;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.LIST;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.REPLACE;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.RETRIEVE;
-import static com.nedap.university.protocol.FileStorageHeaderFlags.SEND;
 
 public class FileStorageServiceHandler {
 
@@ -43,7 +44,8 @@ public class FileStorageServiceHandler {
   private InetAddress address;
   private int port;
 
-  public FileStorageServiceHandler(DatagramSocket socket, String fileStoragePath) throws IOException {
+  public FileStorageServiceHandler(DatagramSocket socket, String fileStoragePath)
+      throws IOException {
     assembler = new FileStoragePacketAssembler(this);
     decoder = new FileStoragePacketDecoder();
     fileHandler = new FileStorageFileHandler(fileStoragePath);
@@ -88,6 +90,12 @@ public class FileStorageServiceHandler {
     int listOfFilesLength = listOfFiles.length;
     int i = 0;
 
+    if (listOfFilesLength == 0) {
+      socket.send(
+          assembler.createPacket("No files stored on the Pi".getBytes(), 0,
+              assembler.setFlags(Set.of(LIST, ACK, FINAL))));
+    }
+
     while (listOfFilesLength > 0) {
       byte[] payload = new byte[Math.min(listOfFilesLength, PAYLOAD_SIZE)];
       System.arraycopy(listOfFiles, i++ * PAYLOAD_SIZE, payload, 0, payload.length);
@@ -113,50 +121,54 @@ public class FileStorageServiceHandler {
 
   public long clientRequest(String filePath, FileStorageHeaderFlags flag)
       throws IOException, FileException {
+    int retransmits = 0;
     long fileSize = 0;
+    DatagramPacket requestPacket = switch (flag) {
 
-    switch (flag) {
-      case SEND:
-      case REPLACE:
-        socket.send(assembler.createRequestPacket(Files.size(Paths.get(filePath)),
-            fileHandler.getFileNameBytes(filePath),
-            assembler.setFlags(flag)));
-        break;
+      case SEND, REPLACE -> assembler.createRequestPacket(Files.size(Paths.get(filePath)),
+          fileHandler.getFileNameBytes(filePath),
+          assembler.setFlags(flag));
 
-      case RETRIEVE:
-      case DELETE:
-        socket.send(assembler.createRequestPacket(0, fileHandler.getFileNameBytes(filePath),
-            assembler.setFlags(flag)));
-        break;
+      case RETRIEVE, DELETE ->
+          assembler.createRequestPacket(0, fileHandler.getFileNameBytes(filePath),
+              assembler.setFlags(flag));
 
-      case LIST:
-        socket.send(assembler.createPacket(new byte[1], 0, assembler.setFlags(flag)));
-        break;
-    }
+      case LIST -> assembler.createPacket(new byte[1], 0, assembler.setFlags(flag));
+
+      default -> throw new IOException("Invalid request flag");
+    };
+    socket.send(requestPacket);
 
     while (true) {
-      socket.setSoTimeout(10000);
-      DatagramPacket receivedPacket = assembler.createBufferPacket(PACKET_SIZE);
-      socket.receive(receivedPacket);
+      socket.setSoTimeout(1000);
+      try {
+        DatagramPacket receivedPacket = assembler.createBufferPacket(PACKET_SIZE);
+        socket.receive(receivedPacket);
 
-      if (decoder.hasFlag(receivedPacket, ERROR)) {
-        throw new FileException(new String(decoder.getPayload(receivedPacket)));
-      }
-      if (!decoder.hasFlag(receivedPacket, ACK)) {
-        continue;
-      }
-      if (decoder.hasFlags(receivedPacket, Set.of(SEND, REPLACE, RETRIEVE))) {
-        fileSize = decoder.getFileSize(receivedPacket);
-        break;
-      } else if (decoder.hasFlag(receivedPacket, DELETE)) {
-        logMessage("File successfully deleted: " + decoder.getFileName(receivedPacket), false);
-        break;
-      } else if (decoder.hasFlag(receivedPacket, LIST)) {
-        List<DatagramPacket> packetList = new ArrayList<>();
-        packetList.add(receivedPacket);
-        if (decoder.hasFlag(receivedPacket, FINAL)) {
-          receiveFileList(packetList);
+        if (decoder.hasFlag(receivedPacket, ERROR)) {
+          throw new FileException(new String(decoder.getPayload(receivedPacket)));
+        }
+        if (!decoder.hasFlag(receivedPacket, ACK)) {
+          continue;
+        }
+        if (decoder.hasFlags(receivedPacket, Set.of(SEND, REPLACE, RETRIEVE))) {
+          fileSize = decoder.getFileSize(receivedPacket);
           break;
+        } else if (decoder.hasFlag(receivedPacket, DELETE)) {
+          logMessage("File successfully deleted: " + decoder.getFileName(receivedPacket), false);
+          break;
+        } else if (decoder.hasFlag(receivedPacket, LIST)) {
+          List<DatagramPacket> packetList = new ArrayList<>();
+          packetList.add(receivedPacket);
+          if (decoder.hasFlag(receivedPacket, FINAL)) {
+            receiveFileList(packetList);
+            break;
+          }
+        }
+      } catch (SocketTimeoutException e) {
+        socket.send(requestPacket);
+        if (retransmits++ == 10) {
+          throw new IOException("Receive timed out");
         }
       }
     }
@@ -183,7 +195,7 @@ public class FileStorageServiceHandler {
     switch (flag) {
       case SEND:
         fileTooLarge(fileSize);
-        socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),
+        sendRequestAcknowledgement(assembler.createRequestPacket(fileSize, fileName.getBytes(),
             assembler.setFlags(Set.of(SEND, ACK))));
         receiveFile(fileName, fileSize, true);
         break;
@@ -191,7 +203,7 @@ public class FileStorageServiceHandler {
       case REPLACE:
         fileExists(fileName);
         fileTooLarge(fileSize);
-        socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),
+        sendRequestAcknowledgement(assembler.createRequestPacket(fileSize, fileName.getBytes(),
             assembler.setFlags(Set.of(REPLACE, ACK))));
         replaceFile(fileName, fileSize, true);
         break;
@@ -199,7 +211,7 @@ public class FileStorageServiceHandler {
       case RETRIEVE:
         fileExists(fileName);
         fileSize = fileHandler.getFileSize(fileName);
-        socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),
+        sendRequestAcknowledgement(assembler.createRequestPacket(fileSize, fileName.getBytes(),
             assembler.setFlags(Set.of(RETRIEVE, ACK))));
         sendFile(fileHandler.getFileStoragePath(fileName), fileSize, true);
         break;
@@ -207,7 +219,7 @@ public class FileStorageServiceHandler {
       case DELETE:
         fileExists(fileName);
         deleteFile(fileName);
-        socket.send(assembler.createRequestPacket(fileSize, fileName.getBytes(),
+        sendRequestAcknowledgement(assembler.createRequestPacket(fileSize, fileName.getBytes(),
             assembler.setFlags(Set.of(DELETE, ACK))));
         break;
 
@@ -218,6 +230,24 @@ public class FileStorageServiceHandler {
       default:
         throw new RequestException();
     }
+  }
+
+  public void sendRequestAcknowledgement(DatagramPacket ackPacket) throws IOException {
+    while (true) {
+      socket.setSoTimeout(3000);
+      try {
+        socket.send(ackPacket);
+
+        DatagramPacket requestPacket = assembler.createBufferPacket(PACKET_SIZE);
+        socket.receive(requestPacket);
+
+        socket.send(ackPacket);
+        System.out.println("Retransmitting ack");
+      } catch (SocketTimeoutException e) {
+        break;
+      }
+    }
+    socket.setSoTimeout(0);
   }
 
   public void sendErrorPacket(String error) throws IOException {
