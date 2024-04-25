@@ -63,7 +63,8 @@ public class FileStorageClient {
                 break;
 
               case 2:
-                System.out.println("Enter the path to the file (e.g /users/user/documents/file.pdf):");
+                System.out.println(
+                    "Enter the path to the file (e.g /users/user/documents/file.pdf):");
                 if (input.hasNextLine()) {
                   clientHandler.sendReplaceFile(input.nextLine(), REPLACE);
                 }
@@ -128,9 +129,5 @@ public class FileStorageClient {
   public void closeClient() {
     clientHandler.closeSocket();
     System.out.println("Exiting client.....");
-  }
-
-  public static void main(String[] args) {
-    new FileStorageClient();
   }
 }
